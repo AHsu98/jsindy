@@ -1,3 +1,109 @@
 import jax
 import jax.numpy as jnp
+from jsindy.trajectory_model import TrajectoryModel
+from jsindy.dynamics_model import FeatureLinearModel
 
+class FullDataTerm():
+    def __init__(
+        self,
+        t,
+        x,
+        trajectory_model:TrajectoryModel
+        ):
+        self.t = t
+        self.x = x
+        self.trajectory_model = trajectory_model
+        self.system_dim = x.shape[1]
+        self.num_obs = len(t)
+        self.total_size = self.num_obs * self.xdim
+    
+    def residual(self,z):
+        #TODO: Code optimization, directly adapt trajectoy_model
+        #To the observation locations
+        return self.x - self.trajectory_model(self.t,z)
+    
+    def residual_flat(self,z):
+        return self.residual(z).flatten()
+
+class PartialDataTerm():
+    def __init__(
+        self,
+        t,
+        y,v,
+        trajectory_model:TrajectoryModel
+        ):
+        self.t = t
+        self.y = y
+        self.v = v
+        self.trajectory_model = trajectory_model
+        self.system_dim = v.shape[1]
+        self.num_obs = len(t)
+        self.total_size = len(t)
+        
+    
+    def residual(self,z):
+        pred_y = jnp.sum(
+            self.interpolant(self.t,z) * self.v,
+            axis=1
+            )
+        return self.y - pred_y
+    
+    def residual_flat(self,z):
+        return self.residual(self,z)
+
+class CollocationTerm():
+    def __init__(
+        self,
+        t_colloc,
+        trajectory_model:TrajectoryModel,
+        dynamics_model:FeatureLinearModel,
+        ):
+        self.t_colloc = t_colloc
+        self.num_colloc = len(t_colloc)
+        self.system_dim = trajectory_model.system_dim
+        self.trajectory_model = trajectory_model
+        self.dynamics_model = dynamics_model
+    
+    def residual(
+        self,
+        z,theta
+    ):
+        X = self.trajectory_model(self.t_colloc,z)
+        Xhat_pred = self.dynamics_model(X,theta)
+        Xhat_true = self.trajectory_model.derivative(self.t_colloc,z,order = 1)
+        return Xhat_true - Xhat_pred
+    
+    def residual_flat(
+        self,
+        z,theta
+    ):
+        return self.residual(z,theta).flatten()
+
+class JointResidual():
+    def __init__(
+        self,
+        data_term:FullDataTerm|PartialDataTerm,
+        colloc_term:CollocationTerm
+        ):
+        self.data_term = data_term
+        self.colloc_term = colloc_term
+
+    def data_residual(self,z):
+        return self.data_term.residual_flat(z)
+    
+    def colloc_residual(self,z,theta):
+        return self.colloc_term.residual_flat(z,theta)
+    
+    def residual(self,z,theta,params):
+        data_weight = jnp.sqrt(params['data_weight'])
+        colloc_weight = jnp.sqrt(params['colloc_weight'])
+        return jnp.hstack(
+            [
+                data_weight*self.data_residual(z),
+                colloc_weight * self.colloc_residual(z,theta)
+                ])
+
+
+
+        
+    
