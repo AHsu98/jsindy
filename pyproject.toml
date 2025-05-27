@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools>=62", "setuptools_scm[toml]>=6.2"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jsindy"
+dynamic = ["version"]
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+dependencies = [
+    "jax[cuda12]",
+    "numpy",
+    "scipy",
+    "matplotlib",
+    "tqdm",
+    "ipykernel",
+    "jaxopt",
+    "cvxpy",
+    "jupyter",
+    "ipykernel",
+    "ipywidgets",
+    "matplotlib",
+    "diffrax",
+    "equinox",
+    "sympy",
+    "sympy2jax",
+    "pandas",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest",
+  "coverage",
+]
+
+[tool.setuptools]
+packages = ["jsindy"]
+
+[tool.setuptools_scm]
+
+
+[tool.black]
+line-length = 88
+extend-exclude = '''
+/(
+    \.git
+  | \.mypy_cache
+  | \.venv
+  | .vscode
+  | version.py
+  | build
+  | dist
+  | env
+)/
+'''
