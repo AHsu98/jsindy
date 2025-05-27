@@ -13,7 +13,7 @@ class JSINDyModel():
         trajectory_model:TrajectoryModel,
         dynamics_model:FeatureLinearModel,
         optimizer:Optimizer = default_optimizer
-        ):
+    ):
         self.traj_model = trajectory_model
         self.dynamics_model = dynamics_model
         self.optimizer = optimizer
@@ -21,45 +21,43 @@ class JSINDyModel():
     def initialize_fit(
         self,
         t,
-        x = None,
-        y = None,
-        v = None,
-        ):
+        x,
+        params = None
+    ):
+        if params is None:
+            params = dict()
         self.t = t
         self.x = x
-        self.y = y
-        self.v = v
 
-        is_partial_data = check_is_partial_data(t,x,y,v)
-        if is_partial_data is True:
-            self.traj_model = self.traj_model.initialize_partial(
-                self.t,self.y,self.v
-                )
-            self.noise2_est = self.traj_model.noise2_est
-            self.dynamics_model = self.dynamics_model.initialize_partial(
-                self.t,self.y.self.v
-            )
-            self.data_term = PartialDataTerm(self.t,self.y,self.v,trajectory_model=self.traj_model)
-        else:
-            self.traj_model = self.traj_model.initialize_full(
-                self.t,self.x
-                )
-            self.dynamics_model = self.dynamics_model.initialize_full(
-                self.t,self.x
-            )
-            self.data_term = FullDataTerm(
-                self.t,self.x,self.traj_model
+        params = self.traj_model.initialize_full(
+            self.t,self.x,params
             )
         
+        params = self.dynamics_model.initialize_full(
+            self.t,self.x,params
+        )
+
+        self.data_term = FullDataTerm(
+            self.t,self.x,self.traj_model
+        )
+        return params
+        
+        
     def fit(
-        self,t,
-        x = None,y = None,v = None,
+        self,
+        t,
+        x,
+        params = None
     ):
-        self.initialize_fit(t,x,y,v)
-        z,theta,opt_result = self.optimizer.run(self)
+        if params is None:
+            params = dict()
+        params = self.initialize_fit(t,x,params)
+        z,theta,opt_result,params = self.optimizer.run(self,params)
         self.z = z
         self.theta = theta
         self.opt_result = opt_result
+        self.params = params
+        
 
 
 
