@@ -15,7 +15,7 @@ class FullDataTerm():
         self.trajectory_model = trajectory_model
         self.system_dim = x.shape[1]
         self.num_obs = len(t)
-        self.total_size = self.num_obs * self.xdim
+        self.total_size = self.num_obs * self.system_dim
     
     def residual(self,z):
         #TODO: Code optimization, directly adapt trajectoy_model
@@ -102,8 +102,3 @@ class JointResidual():
                 data_weight*self.data_residual(z),
                 colloc_weight * self.colloc_residual(z,theta)
                 ])
-
-
-
-        
-    

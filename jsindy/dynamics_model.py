@@ -1,22 +1,85 @@
 import jax
 import jax.numpy as jnp
 from abc import ABC
+import pysindy as ps
+from .util import l2reg_lstsq
 
-class FeatureLinearModel():
+
+class DynamicsModel(ABC):
+    def predict(self, x, params):
+        pass
+
+class PolyLib(ps.PolynomialLibrary):
+    def fit(self, x: jax.Array):
+        #Using ps.PolynomialLibrary to get powers right now
+        super().fit(x)
+        self.jpowers_ = jnp.array(self.powers_)
+
+    def transform(self, x: jax.Array):
+        if jnp.ndim(x)==2:
+            return jnp.prod(jax.vmap(jnp.pow,in_axes=(None,0))(x,self.jpowers_),axis=2).T
+        elif jnp.ndim(x)==1:
+            return jnp.prod(jax.vmap(jnp.pow,in_axes=(None,0))(x,self.jpowers_),axis=1)
+        else:
+            raise ValueError(f"Polynomial library cannot handle input shape, {x.shape}")
+
+    def __call__(self, X):
+        return self.transform(X)
+
+class FeatureLinearModel(DynamicsModel):
     def __init__(
-        self,
-        feature_map,
-        in_dim,
-        out_dim,
-        ):
-        self.shape = ...
+            self, 
+            feature_map=PolyLib(degree=2),
+            reg_scaling = 1.
+            ) -> None:
         self.feature_map = feature_map
-        self.regularization_weights = ...
+        self.attached = False
+        self.reg_scaling = reg_scaling
+        
 
-    def featurize(self,X):
-        return self.feature_map(X)
+    def attach(self, x: jax.Array):
+        self.feature_map.fit(x)
+        self.num_params = (
+            self.feature_map.n_features_in_ * self.feature_map.n_output_features_
+        )
+        self.num_features = self.feature_map.n_output_features_
+        self.attached = True
+        self.regmat = self.reg_scaling*jnp.eye(self.num_params)
     
-    def __call__(self, X,theta):
-        FX = self.featurize(X)
-        return FX@theta
+    def initialize(self,t,x,params):
+        self.attach(x)
+        return params
+
+    # somewhere in jsindy.fit a predict is used and needs to fixed 
+    def predict(self, x, params):
+        if jnp.ndim(x)==1:
+            return self.feature_map.transform(x) @ params.T
+        elif jnp.ndim(x)==2:
+            return self.feature_map.transform(x) @ params
+        else:
+            raise ValueError(f"x shape not compatible, x.shape = {x.shape}")
     
+    def get_fitted_params(self,x,y,lam = 1e-3):
+        A = self.feature_map.transform(x)
+        return l2reg_lstsq(A,y,reg = lam)
+
+# class FeatureLinearModel():
+#     def __init__(
+#         self,
+#         feature_map,
+#         in_dim,
+#         out_dim,
+#         ):
+#         self.shape = ...
+#         self.feature_map = feature_map
+#         self.regularization_weights = ...
+
+#     def featurize(self,x):
+#         return self.feature_map(x)
+    
+#     def predict(self, x,theta):
+#         FX = self.featurize(x)
+#         return FX@theta
+    
+#     def __call__(self, x,theta):
+#         self.predict(x,theta)

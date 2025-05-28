@@ -1,7 +1,7 @@
 import jax
 import jax.numpy as jnp
 from tqdm.auto import tqdm
-from jsindy.utils import tree_scale,tree_dot,tree_add
+from jsindy.util import tree_scale,tree_dot,tree_add
 from warnings import warn
 
 def build_armijo_linesearch(f,decrease_ratio=0.5,slope=0.05,max_iter = 25):
