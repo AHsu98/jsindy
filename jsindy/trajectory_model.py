@@ -90,23 +90,26 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
         self.regmat = self.RKHS_mat
         self.is_attached = True
 
-    def _evaluate_operator(self, t, params, operator):
+    def _evaluate_operator(self, t, z, operator):
         evaluation_matrix = get_kernel_block_ops(
             k=self.kernel,
             ops_left=(operator,),
             ops_right=self.basis_operators,
             output_dim=self.dimension,
         )(t, self.time_points)
-        return evaluation_matrix @ params
+        return evaluation_matrix @ z
 
-    def __call__(self, t, params) -> Any:
-        return self._evaluate_operator(t, params, eval_k).reshape(
+    def __call__(self, t, z) -> Any:
+        return self.predict(t,z)
+    
+    def predict(self,t,z):
+        return self._evaluate_operator(t, z, eval_k).reshape(
             t.shape[0], self.dimension
         )
 
-    def derivative(self, t, params, diff_order=1) -> Any:
+    def derivative(self, t, z, diff_order=1) -> Any:
         return self._evaluate_operator(
-            t, params, 
+            t, z, 
             nth_derivative_operator_1d(diff_order)
         ).reshape(t.shape[0], self.dimension)
 
@@ -121,6 +124,4 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
 
         M = A.T@A + lam * K
         M = M + 1e-7*jnp.diag(M)
-        print(M.shape)
-
         return jnp.linalg.solve(M,A.T@obs.flatten())
