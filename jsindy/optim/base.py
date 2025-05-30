@@ -2,6 +2,7 @@ import jax
 from jsindy.optim.solvers.lm_solver import CholeskyLM, LMSettings
 from jax.scipy.linalg import block_diag
 import jax.numpy as jnp
+from jsindy.util import full_data_initialize
 
 class LMSolver():
     def __init__(
@@ -17,9 +18,11 @@ class LMSolver():
         params["data_weight"] = 1/(params["sigma2_est"]+0.01)
         params["colloc_weight"] = 10
 
-        z_theta_init = jnp.zeros(
-            model.traj_model.tot_params + model.dynamics_model.tot_params
-        )
+        # z_theta_init = jnp.zeros(
+        #     model.traj_model.tot_params + model.dynamics_model.tot_params
+        # )
+        z0,theta0 = full_data_initialize(model.t,model.x,model.traj_model,model.dynamics_model)
+        z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         def resid_func(z_theta):
             z = z_theta[:model.traj_model.tot_params]
