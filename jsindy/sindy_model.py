@@ -6,7 +6,7 @@ from jsindy.dynamics_model import FeatureLinearModel
 from jsindy.residual_functions import (
     FullDataTerm,PartialDataTerm,CollocationTerm,
     JointResidual)
-from jsindy.optim import DefaultOptimizer,Optimizer
+from jsindy.optim import DefaultOptimizer, LMSolver
 default_optimizer = DefaultOptimizer()
 
 class JSINDyModel():
@@ -14,7 +14,7 @@ class JSINDyModel():
         self,
         trajectory_model:TrajectoryModel,
         dynamics_model:FeatureLinearModel,
-        optimizer:Optimizer = default_optimizer
+        optimizer:LMSolver = LMSolver()
     ):
         self.traj_model = trajectory_model
         self.dynamics_model = dynamics_model

@@ -94,9 +94,9 @@ class JointResidual():
     def colloc_residual(self,z,theta):
         return self.colloc_term.residual_flat(z,theta)
     
-    def residual(self,z,theta,params):
-        data_weight = jnp.sqrt(params['data_weight'])
-        colloc_weight = jnp.sqrt(params['colloc_weight'])
+    def residual(self, z, theta, data_weight, colloc_weight):
+        # data_weight = jnp.sqrt(params['data_weight'])
+        # colloc_weight = jnp.sqrt(params['colloc_weight'])
         return jnp.hstack(
             [
                 data_weight*self.data_residual(z),

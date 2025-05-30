@@ -45,6 +45,9 @@ class FeatureLinearModel(DynamicsModel):
         self.num_features = self.feature_map.n_output_features_
         self.attached = True
         self.regmat = self.reg_scaling*jnp.eye(self.num_params)
+        self.num_targets = x.shape[1]
+        self.tot_params = self.num_features*self.num_targets
+        self.param_shape = (self.num_features, self.num_targets)
     
     def initialize(self,t,x,params):
         self.attach(x)
