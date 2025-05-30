@@ -67,7 +67,7 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
         params['sigma2_est'] = sigma2_est
         self.attach(t_obs = t,x_obs = x, basis_time_points=t_colloc)
         self.system_dim = x.shape[1]
-        self.num_basis = len(t_colloc)
+        self.num_basis = len(self.derivative_orders) * len(t_colloc)
         self.tot_params = self.system_dim*self.num_basis
         return params
         

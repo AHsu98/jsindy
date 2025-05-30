@@ -39,7 +39,6 @@ class LMSettings:
 
     max_iter: int = 501
     atol_gradnorm: float = 1e-8
-    atol_gn_decrement: float = 1e-12
     cmin: float = 0.05
     line_search_increase_ratio: float = 1.5
     max_line_search_iterations: int = 20
@@ -331,15 +330,7 @@ def CholeskyLM(init_params, model, beta, optSettings: LMSettings = LMSettings())
                     i, loss, conv_history.gradnorm[-1], alpha, improvement_ratio
                 )
             return params, conv_history
-        
-        elif model_decrease * (1 + alpha) <= optSettings.atol_gn_decrement:
-            conv_history.finish(convergence_tag="atol-gauss-newton-decrement")
-            if optSettings.show_progress is True:
-                print_progress(
-                    i, loss, conv_history.gradnorm[-1], alpha, improvement_ratio
-                )
-            return params, conv_history
-        
+                
         if i % optSettings.print_every == 0 or i <= 5 or i == optSettings.max_iter-1:
             if optSettings.show_progress is True:
                 print_progress(

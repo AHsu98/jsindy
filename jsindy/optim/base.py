@@ -1,6 +1,7 @@
 import jax
 from jsindy.optim.solvers.lm_solver import CholeskyLM, LMSettings
 from jax.scipy.linalg import block_diag
+import jax.numpy as jnp
 
 class LMSolver():
     def __init__(
@@ -16,10 +17,14 @@ class LMSolver():
         params["data_weight"] = 1/(params["sigma2_est"]+0.01)
         params["colloc_weight"] = 10
 
+        z_theta_init = jnp.zeros(
+            model.traj_model.tot_params + model.dynamics_model.tot_params
+        )
+
         def resid_func(z_theta):
             z = z_theta[:model.traj_model.tot_params]
             theta = z_theta[model.traj_model.tot_params:].reshape(
-                model.dynamics_model.params_shape
+                model.dynamics_model.param_shape
             )
             return model.residuals.residual(
                 z,
@@ -36,14 +41,14 @@ class LMSolver():
 
         lm_prob = LMProblem(resid_func, jac_func, damping_matrix)
         z_theta, opt_results = CholeskyLM(
-            init_params, 
+            z_theta_init, 
             lm_prob,
             self.beta_reg,
             self.solver_settings
         )
         z = z_theta[:model.traj_model.tot_params]
         theta = z_theta[model.traj_model.tot_params:].reshape(
-            model.dynamics_model.params_shape
+            model.dynamics_model.param_shape
         )
 
         return z, theta, opt_results, params
@@ -52,4 +57,4 @@ class LMProblem():
     def __init__(self,resid_func, jac_func, damping_matrix):
         self.resid_func = resid_func
         self.jac_func = jac_func
-        self.damping = damping_matrix
+        self.damping_matrix = damping_matrix

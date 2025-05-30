@@ -49,3 +49,39 @@ def tree_add(tree,other):
 
 def tree_scale(tree,scalar):
     return jax.tree.map(lambda x:scalar*x,tree)
+
+
+def get_equations(coef, feature_names,feature_library,precision: int = 3) -> list[str]:
+    """
+    Get the right hand sides of the SINDy model equations.
+
+    Parameters
+    ----------
+    precision: int, optional (default 3)
+        Number of decimal points to include for each coefficient in the
+        equation.
+
+    Returns
+    -------
+    equations: list of strings
+        List of strings representing the SINDy model equations for each
+        input feature.
+    """
+    feat_names = feature_library.get_feature_names(feature_names)
+
+    def term(c, name):
+        rounded_coef = jnp.round(c, precision)
+        if rounded_coef == 0:
+            return ""
+        else:
+            return f"{c:.{precision}f} {name}"
+
+    equations = []
+    for coef_row in coef:
+        components = [term(c, i) for c, i in zip(coef_row, feat_names)]
+        eq = " + ".join(filter(bool, components))
+        if not eq:
+            eq = f"{0:.{precision}f}"
+        equations.append(eq)
+
+    return equations

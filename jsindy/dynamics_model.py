@@ -6,7 +6,7 @@ from .util import l2reg_lstsq
 
 
 class DynamicsModel(ABC):
-    def predict(self, x, params):
+    def predict(self, x, theta):
         pass
 
 class PolyLib(ps.PolynomialLibrary):
@@ -39,30 +39,33 @@ class FeatureLinearModel(DynamicsModel):
 
     def attach(self, x: jax.Array):
         self.feature_map.fit(x)
-        self.num_params = (
+        self.num_theta = (
             self.feature_map.n_features_in_ * self.feature_map.n_output_features_
         )
         self.num_features = self.feature_map.n_output_features_
         self.attached = True
-        self.regmat = self.reg_scaling*jnp.eye(self.num_params)
+        self.regmat = self.reg_scaling*jnp.eye(self.num_theta)
         self.num_targets = x.shape[1]
         self.tot_params = self.num_features*self.num_targets
         self.param_shape = (self.num_features, self.num_targets)
     
-    def initialize(self,t,x,params):
+    def initialize(self,t,x,theta):
         self.attach(x)
-        return params
+        return theta
 
     # somewhere in jsindy.fit a predict is used and needs to fixed 
-    def predict(self, x, params):
+    def predict(self, x, theta):
         if jnp.ndim(x)==1:
-            return self.feature_map.transform(x) @ params.T
+            return self.feature_map.transform(x) @ theta.T
         elif jnp.ndim(x)==2:
-            return self.feature_map.transform(x) @ params
+            return self.feature_map.transform(x) @ theta
         else:
             raise ValueError(f"x shape not compatible, x.shape = {x.shape}")
+        
+    def __call__(self, x,theta):
+        return self.predict(x,theta)
     
-    def get_fitted_params(self,x,y,lam = 1e-3):
+    def get_fitted_theta(self,x,y,lam = 1e-3):
         A = self.feature_map.transform(x)
         return l2reg_lstsq(A,y,reg = lam)
 

@@ -1,6 +1,6 @@
 import jax
 import jax.numpy as jnp
-from jsindy.util import check_is_partial_data,get_collocation_points
+from jsindy.util import check_is_partial_data,get_collocation_points,get_equations
 from jsindy.trajectory_model import TrajectoryModel
 from jsindy.dynamics_model import FeatureLinearModel
 from jsindy.residual_functions import (
@@ -19,6 +19,7 @@ class JSINDyModel():
         self.traj_model = trajectory_model
         self.dynamics_model = dynamics_model
         self.optimizer = optimizer
+        self.feature_names = None
 
     def initialize_fit(
         self,
@@ -68,6 +69,30 @@ class JSINDyModel():
         self.theta = theta
         self.opt_result = opt_result
         self.params = params
+    
+    def print(self,theta=None, precision: int = 3, **kwargs) -> None:
+        """Print the SINDy model equations.
+        precision: int, optional (default 3)
+            Precision to be used when printing out model coefficients.
+        **kwargs: Additional keyword arguments passed to the builtin print function
+        """
+        if theta is None:
+            theta = self.theta
+        eqns = get_equations(
+            coef = theta.T,
+            feature_names = self.feature_names,
+            feature_library = self.dynamics_model.feature_map,
+            precision = precision
+            )
+        if self.feature_names is None:
+            feature_names = [f"x{i}" for i in range(len(eqns))]
+        else:
+            feature_names = self.feature_names
+
+        for name, eqn in zip(feature_names, eqns, strict=True):
+            lhs = f"({name})'"
+            print(f"{lhs} = {eqn}", **kwargs)
+
 
 
 

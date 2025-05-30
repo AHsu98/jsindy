@@ -70,7 +70,7 @@ class CollocationTerm():
     ):
         X = self.trajectory_model(self.t_colloc,z)
         Xhat_pred = self.dynamics_model(X,theta)
-        Xhat_true = self.trajectory_model.derivative(self.t_colloc,z,order = 1)
+        Xhat_true = self.trajectory_model.derivative(self.t_colloc,z,diff_order = 1)
         return Xhat_true - Xhat_pred
     
     def residual_flat(
