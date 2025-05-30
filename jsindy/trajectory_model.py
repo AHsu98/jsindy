@@ -70,8 +70,6 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
         self.num_basis = len(self.derivative_orders) * len(t_colloc)
         self.tot_params = self.system_dim*self.num_basis
         return params
-        
-        
 
     def attach(self,t_obs,x_obs, basis_time_points):
         self.dimension = x_obs.shape[1]
@@ -108,14 +106,21 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
 
     def derivative(self, t, params, diff_order=1) -> Any:
         return self._evaluate_operator(
-            t, params, nth_derivative_operator_1d(diff_order)
+            t, params, 
+            nth_derivative_operator_1d(diff_order)
         ).reshape(t.shape[0], self.dimension)
 
     def get_fitted_params(self, t, obs,lam = 1e-4):
-        K = get_kernel_block_ops(
+        A = get_kernel_block_ops(
             k=self.kernel,
             ops_left=(eval_k,),
             ops_right=self.basis_operators,
             output_dim=self.dimension,
         )(t, self.time_points)
-        return l2reg_lstsq(K,obs.flatten(),reg = lam)
+        K = self.regmat
+
+        M = A.T@A + lam * K
+        M = M + 1e-7*jnp.diag(M)
+        print(M.shape)
+
+        return jnp.linalg.solve(M,A.T@obs.flatten())

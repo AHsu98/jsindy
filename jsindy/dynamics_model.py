@@ -65,9 +65,9 @@ class FeatureLinearModel(DynamicsModel):
     def __call__(self, x,theta):
         return self.predict(x,theta)
     
-    def get_fitted_theta(self,x,y,lam = 1e-3):
+    def get_fitted_theta(self,x,xdot,lam = 1e-2):
         A = self.feature_map.transform(x)
-        return l2reg_lstsq(A,y,reg = lam)
+        return l2reg_lstsq(A,xdot,reg = lam)
 
 # class FeatureLinearModel():
 #     def __init__(
