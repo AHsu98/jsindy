@@ -6,8 +6,7 @@ from jsindy.dynamics_model import FeatureLinearModel
 from jsindy.residual_functions import (
     FullDataTerm,PartialDataTerm,CollocationTerm,
     JointResidual)
-from jsindy.optim import DefaultOptimizer, LMSolver
-default_optimizer = DefaultOptimizer()
+from jsindy.optim import LMSolver
 
 class JSINDyModel():
     def __init__(
@@ -25,8 +24,8 @@ class JSINDyModel():
         self,
         t,
         x,
+        t_colloc = None,
         params = None,
-        t_colloc = None
     ):
         if t_colloc is None:
             t_colloc = get_collocation_points(t)
@@ -58,13 +57,14 @@ class JSINDyModel():
         self,
         t,
         x,
+        t_colloc = None,
         params = None
     ):
         #TODO: Add a logs dictionary that's carried around in the same way that params is
         
         if params is None:
             params = dict()
-        params = self.initialize_fit(t,x,params)
+        params = self.initialize_fit(t,x,t_colloc, params)
         z,theta,opt_result,params = self.optimizer.run(self,params)
         self.z = z
         self.theta = theta
