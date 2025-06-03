@@ -93,11 +93,13 @@ class JSINDyModel():
         for name, eqn in zip(feature_names, eqns, strict=True):
             lhs = f"({name})'"
             print(f"{lhs} = {eqn}", **kwargs)
+            
+    def predict(self,x,theta = None):
+        if theta is None:
+            theta = self.theta
+        return self.dynamics_model.predict(x,theta)
 
-
-
-
-
-
-    
-        
+    def predict_state(self,t,z = None):
+        if z is None:
+            z = self.z
+        return self.traj_model.predict(t,z)
