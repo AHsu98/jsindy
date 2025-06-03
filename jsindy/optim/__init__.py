@@ -1,6 +1,8 @@
 from .defaults import DefaultOptimizer
-from .base import LMSolver
+from .base import LMSolver, LMSettings, AlternatingActiveSetLMSolver
 __all__ = [
     "DefaultOptimizer",
-    "LMSolver"
+    "AlternatingActiveSetLMSolver"
+    "LMSolver",
+    "LMSettings"
 ]

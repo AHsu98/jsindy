@@ -32,6 +32,7 @@ class JSINDyModel():
             t_colloc = get_collocation_points(t)
         if params is None:
             params = dict()
+        self.t_colloc = t_colloc
         self.t = t
         self.x = x
 
