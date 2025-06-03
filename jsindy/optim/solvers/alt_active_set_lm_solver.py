@@ -26,7 +26,7 @@ class ConvHistory():
 class pySindySparsifier():
     def __init__(self,pysindy_optimizer=None):
         if pysindy_optimizer is None:
-            pysindy_optimizer = STLSQ(threshold = 0.25,alpha = 0.05)
+            pysindy_optimizer = STLSQ(threshold = 0.25,alpha = 0.01)
         self.optimizer = pysindy_optimizer
     
     def __call__(self, feat_X , Xdot):
