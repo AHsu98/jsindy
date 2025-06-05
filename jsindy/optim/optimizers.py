@@ -97,7 +97,8 @@ class AlternatingActiveSetLMSolver():
         )
 
         lm_prob = LMProblem(resid_func, jac_func, damping_matrix)
-        print("Warm Start")
+        if self.solver_settings.show_progress:
+            print("Warm Start")
         z_theta, lm_opt_results = CholeskyLM(
             z_theta_init, 
             lm_prob,
@@ -109,7 +110,8 @@ class AlternatingActiveSetLMSolver():
             model.dynamics_model.param_shape
         )
 
-        print("Alternating Activeset Sparsifier")
+        if self.solver_settings.show_progress:
+            print("Alternating Activeset Sparsifier")
 
         def F_split(z, theta):
             data_weight = params["data_weight"]
@@ -133,6 +135,7 @@ class AlternatingActiveSetLMSolver():
             theta0=theta,
             residual_objective=aaslm_prob,
             beta=self.beta_reg,
+            show_progress=self.solver_settings.show_progress
         )
         theta = theta.reshape(
             model.dynamics_model.param_shape

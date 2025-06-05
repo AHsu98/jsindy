@@ -39,7 +39,8 @@ def AlternatingActiveSolve(
     theta0,
     residual_objective,
     beta,
-    sparsifier: pySindySparsifier = None
+    sparsifier: pySindySparsifier = None,
+    show_progress: bool = True
 ):
     start_time = time.time()
     if sparsifier is None:
@@ -173,13 +174,15 @@ def AlternatingActiveSolve(
 
         if set(np.array(support)) == set(np.array(new_support)):
             #Run 1 more iteration just to be sure
-            print("Active set stabilized")
+            if show_progress:
+                print("Active set stabilized")
             convergence_tag = "stable-active-set"
             finished = True
         else:
             sym_diff = set(np.array(support)).symmetric_difference(
                 set(np.array(new_support)))
-            print(f"{len(sym_diff)} active coeffs changed")
+            if show_progress:
+                print(f"{len(sym_diff)} active coeffs changed")
         support = new_support
 
         cum_time.append(time.time()-start_time)

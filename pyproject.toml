@@ -39,7 +39,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["jsindy", "data"]
+packages = ["jsindy", "data", "exp"]
 
 [tool.setuptools_scm]
 

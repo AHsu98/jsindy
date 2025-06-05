@@ -61,7 +61,7 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
             X = t,
             y = x,
             lbfgs_tol=1e-8,
-            show_progress=True
+            show_progress=params["show_progress"]
         )
         self.kernel = fitted_kernel
         params['sigma2_est'] = sigma2_est
