@@ -101,6 +101,7 @@ def big_experiment(exp_folder: str = "jsindy_results"):
                 f"noise: {float(noise)}, dt: {float(dt)}, "
                 f"err = {l2_err}, time = {tot_time}."
             )
+            idx += 1
 
 
 if __name__ == "__main__":
