@@ -1,3 +1,6 @@
+import jax
+jax.config.update('jax_enable_x64',True)
+
 from pathlib import Path
 
 from jsindy.sindy_model import JSINDyModel

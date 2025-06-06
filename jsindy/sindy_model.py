@@ -1,4 +1,5 @@
 import jax
+jax.config.update('jax_enable_x64',True)
 import jax.numpy as jnp
 from jsindy.util import check_is_partial_data,get_collocation_points,get_equations
 from jsindy.trajectory_model import TrajectoryModel

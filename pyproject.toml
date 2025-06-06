@@ -30,6 +30,7 @@ dependencies = [
     "jaxopt",
     "tqdm",
     "pysindy @ git+https://github.com/AHsu98/pysindy@master",
+    "dill",
 ]
 
 [project.optional-dependencies]
