@@ -21,7 +21,13 @@ class LMSolver():
         params["data_weight"] = 1/(params["sigma2_est"]+0.01)
         params["colloc_weight"] = 10
 
-        z0,theta0 = full_data_initialize(model.t,model.x,model.traj_model,model.dynamics_model)
+        z0,theta0 = full_data_initialize(
+            model.t,
+            model.x,
+            model.traj_model,
+            model.dynamics_model,
+            sigma2_est=params["sigma2_est"]+0.01
+            )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         def resid_func(z_theta):
@@ -73,9 +79,16 @@ class AlternatingActiveSetLMSolver():
 
     def run(self, model, params):
         params["data_weight"] = 1/(params["sigma2_est"]+0.01)
-        params["colloc_weight"] = 10
+        params["colloc_weight"] = 100 * params["data_weight"]
+        print(params)
 
-        z0,theta0 = full_data_initialize(model.t,model.x,model.traj_model,model.dynamics_model)
+        z0,theta0 = full_data_initialize(
+            model.t,
+            model.x,
+            model.traj_model,
+            model.dynamics_model,
+            sigma2_est=params["sigma2_est"]+0.01
+            )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         def resid_func(z_theta):
