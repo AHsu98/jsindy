@@ -124,6 +124,8 @@ class AlternatingActiveSetLMSolver():
         )
 
         if self.solver_settings.show_progress:
+            print("Model after smooth warm start")
+            model.print(theta = theta)
             print("Alternating Activeset Sparsifier")
 
         def F_split(z, theta):
