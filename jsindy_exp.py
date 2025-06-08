@@ -110,4 +110,4 @@ def big_experiment(exp_folder: str = "jsindy_results"):
 
 
 if __name__ == "__main__":
-    big_experiment(exp_folder="jsindy_results/june7_run0/exp_results")
+    big_experiment(exp_folder="jsindy_results/june7_run1/exp_results")
