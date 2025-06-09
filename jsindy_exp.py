@@ -1,5 +1,6 @@
 import jax
 jax.config.update('jax_enable_x64',True)
+jax.config.update('jax_default_device',jax.devices()[2])
 
 from pathlib import Path
 
@@ -110,4 +111,4 @@ def big_experiment(exp_folder: str = "jsindy_results"):
 
 
 if __name__ == "__main__":
-    big_experiment(exp_folder="jsindy_results/june7_run1/exp_results")
+    big_experiment(exp_folder="jsindy_results/june8/exp_results")

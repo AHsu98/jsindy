@@ -100,7 +100,7 @@ class AlternatingActiveSetLMSolver():
                 z,
                 theta,
                 params["data_weight"], 
-                params["colloc_weight"]/100
+                params["colloc_weight"]
             )   
 
         jac_func = jax.jacrev(resid_func)

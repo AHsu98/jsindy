@@ -61,12 +61,6 @@ class ExpData:
 
         if self.n_colloc is None:
             self.n_colloc = self.t_train.shape[0]
-        elif self.n_colloc < self.t_train.shape[0]:
-            warnings.warn(
-                "n_colloc is less than the number of training points",
-                category=UserWarning,
-                stacklevel=2
-            )
         min_t = jnp.min(self.t_train)
         max_t = jnp.max(self.t_train)
         span = max_t - min_t
