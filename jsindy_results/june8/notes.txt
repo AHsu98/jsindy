@@ -1,1 +1,4 @@
 This run should hopefully reproduce the relatively better results in june7_run0.
+
+Note after:
+This one did successfully recreate results of june7_run0.
