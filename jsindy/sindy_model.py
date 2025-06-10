@@ -1,4 +1,5 @@
 import jax
+jax.config.update('jax_enable_x64',True)
 import jax.numpy as jnp
 from jsindy.util import check_is_partial_data,get_collocation_points,get_equations
 from jsindy.trajectory_model import TrajectoryModel
@@ -13,12 +14,13 @@ class JSINDyModel():
         self,
         trajectory_model:TrajectoryModel,
         dynamics_model:FeatureLinearModel,
-        optimizer:LMSolver = LMSolver()
+        optimizer:LMSolver = LMSolver(),
+        feature_names: list[str] = None
     ):
         self.traj_model = trajectory_model
         self.dynamics_model = dynamics_model
         self.optimizer = optimizer
-        self.feature_names = None
+        self.feature_names = feature_names
 
     def initialize_fit(
         self,
@@ -64,6 +66,7 @@ class JSINDyModel():
         
         if params is None:
             params = dict()
+        params["show_progress"] = self.optimizer.solver_settings.show_progress
         params = self.initialize_fit(t,x,t_colloc, params)
         z,theta,opt_result,params = self.optimizer.run(self,params)
         self.z = z

@@ -57,11 +57,11 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
     ):
         fitted_kernel,sigma2_est,conv = fit_kernel(
             init_kernel = self.kernel,
-            init_sigma2= jnp.var(x)/5,
+            init_sigma2= jnp.var(x)/20,
             X = t,
             y = x,
             lbfgs_tol=1e-8,
-            show_progress=True
+            show_progress=params["show_progress"]
         )
         self.kernel = fitted_kernel
         params['sigma2_est'] = sigma2_est

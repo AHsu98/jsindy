@@ -6,6 +6,8 @@ from .kernels import softplus_inverse
 from .tree_opt import run_gradient_descent,run_jaxopt_solver
 from jaxopt import LBFGS
 
+
+SIGMA2_FLOOR = 1e-8
 def build_neg_marglike(X,y):
     if jnp.ndim(y)==1:
         m = 1
@@ -13,6 +15,7 @@ def build_neg_marglike(X,y):
         m = y.shape[1]
     else:
         raise ValueError("y must be either a 1 or two dimensional array")
+    
     
     def neg_marginal_likelihood(kernel,sigma2):
         K = vectorize_kfunc(kernel)(X,X)
@@ -27,7 +30,7 @@ def build_neg_marglike(X,y):
     
     def loss(params):
         k = params['kernel']
-        sigma2 = softplus(params['transformed_sigma2'])
+        sigma2 = softplus(params['transformed_sigma2']) + SIGMA2_FLOOR
         return neg_marginal_likelihood(k,sigma2)
     
     return loss
@@ -103,20 +106,25 @@ def fit_kernel(
         X,
         y,
         loss_builder = build_neg_marglike,
-        gd_tol = 1e-1,
-        lbfgs_tol = 1e-5,
-        max_gd_iter = 1000,
+        gd_tol = 1e-4,
+        lbfgs_tol = 1e-6,
+        max_gd_iter = 3000,
         max_lbfgs_iter = 1000,
-        show_progress=True
+        show_progress=True,
         ):
     loss = loss_builder(X,y)
     init_params = {'kernel':init_kernel,
         'transformed_sigma2':jnp.array(softplus_inverse(init_sigma2))
         }
 
-    params,conv_history_gd = run_gradient_descent(loss,init_params,tol = gd_tol,maxiter = max_gd_iter,show_progress=show_progress)
+    params,conv_history_gd = run_gradient_descent(
+        loss,init_params,tol = gd_tol,
+        maxiter = max_gd_iter,
+        show_progress=show_progress,
+        init_stepsize=1e-4
+        )
     solver = LBFGS(loss,maxiter = max_lbfgs_iter,tol = lbfgs_tol)
     params,conv_history_bfgs,state = run_jaxopt_solver(solver,params, show_progress=show_progress)
     conv_hist = [conv_history_gd,conv_history_bfgs]
 
-    return params['kernel'],jax.nn.softplus(params['transformed_sigma2']),conv_hist
+    return params['kernel'],jax.nn.softplus(params['transformed_sigma2']) + SIGMA2_FLOOR,conv_hist

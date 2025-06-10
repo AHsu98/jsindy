@@ -21,7 +21,13 @@ class LMSolver():
         params["data_weight"] = 1/(params["sigma2_est"]+0.01)
         params["colloc_weight"] = 10
 
-        z0,theta0 = full_data_initialize(model.t,model.x,model.traj_model,model.dynamics_model)
+        z0,theta0 = full_data_initialize(
+            model.t,
+            model.x,
+            model.traj_model,
+            model.dynamics_model,
+            sigma2_est=params["sigma2_est"]+0.01
+            )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         def resid_func(z_theta):
@@ -73,9 +79,16 @@ class AlternatingActiveSetLMSolver():
 
     def run(self, model, params):
         params["data_weight"] = 1/(params["sigma2_est"]+0.01)
-        params["colloc_weight"] = 10
+        params["colloc_weight"] = 100 * params["data_weight"]
+        print(params)
 
-        z0,theta0 = full_data_initialize(model.t,model.x,model.traj_model,model.dynamics_model)
+        z0,theta0 = full_data_initialize(
+            model.t,
+            model.x,
+            model.traj_model,
+            model.dynamics_model,
+            sigma2_est=params["sigma2_est"]+0.01
+            )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         def resid_func(z_theta):
@@ -97,7 +110,8 @@ class AlternatingActiveSetLMSolver():
         )
 
         lm_prob = LMProblem(resid_func, jac_func, damping_matrix)
-        print("Warm Start")
+        if self.solver_settings.show_progress:
+            print("Warm Start")
         z_theta, lm_opt_results = CholeskyLM(
             z_theta_init, 
             lm_prob,
@@ -109,7 +123,10 @@ class AlternatingActiveSetLMSolver():
             model.dynamics_model.param_shape
         )
 
-        print("Alternating Activeset Sparsifier")
+        if self.solver_settings.show_progress:
+            print("Model after smooth warm start")
+            model.print(theta = theta)
+            print("Alternating Activeset Sparsifier")
 
         def F_split(z, theta):
             data_weight = params["data_weight"]
@@ -133,6 +150,7 @@ class AlternatingActiveSetLMSolver():
             theta0=theta,
             residual_objective=aaslm_prob,
             beta=self.beta_reg,
+            show_progress=self.solver_settings.show_progress
         )
         theta = theta.reshape(
             model.dynamics_model.param_shape

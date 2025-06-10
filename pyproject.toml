@@ -30,6 +30,7 @@ dependencies = [
     "jaxopt",
     "tqdm",
     "pysindy @ git+https://github.com/AHsu98/pysindy@master",
+    "dill",
 ]
 
 [project.optional-dependencies]
@@ -39,7 +40,7 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["jsindy", "data"]
+packages = ["jsindy", "data", "exp"]
 
 [tool.setuptools_scm]
 

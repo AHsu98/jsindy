@@ -177,5 +177,4 @@ ex.sh
 logs
 commit.txt
 *.pkl
-*.dill
 *.out

@@ -1,0 +1,11 @@
+Notes from fixes from the june6_fixed run:
+Decrease initial variance estimate in preoptimizing initialization,increase gradient descent iterations
+Decrease the minimum alpha in LM optimizer
+Fix ourselves to 500 collocation points
+
+
+This fixed the problem with dt = 0.2, but didn't make any different for noisy cases
+
+ALSO:
+Accidentally saved a couple of runs from the next run in this folder, 
+don't rerun analysis results without going back to the old commit.

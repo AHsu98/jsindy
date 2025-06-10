@@ -190,6 +190,8 @@ def CholeskyLM(init_params, model, beta, optSettings: LMSettings = LMSettings())
         """
         # Form and solve linear system for step
         M = JtJ + (alpha + beta) * damping_matrix
+        # Add small nugget
+        M = M + 1e-12*jnp.diag(jnp.diag(M))
         Mchol = cho_factor(M)
         step = cho_solve(Mchol, rhs)
         Jstep = J @ step
