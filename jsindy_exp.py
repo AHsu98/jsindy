@@ -43,7 +43,7 @@ def noise_dt_exp(noise_var, dt, save_path:str = None, exp_data: ExpData = Lorenz
     )
 
     trajectory_model = DataAdaptedRKHSInterpolant()
-    dynamics_model = FeatureLinearModel(reg_scaling = 0.1)
+    dynamics_model = FeatureLinearModel(reg_scaling = 0.01)
     optsettings = LMSettings(
         max_iter = 2000,
         show_progress=False,
@@ -55,7 +55,7 @@ def noise_dt_exp(noise_var, dt, save_path:str = None, exp_data: ExpData = Lorenz
     model = JSINDyModel(
         trajectory_model=trajectory_model,
         dynamics_model=dynamics_model,
-        optimizer=AlternatingActiveSetLMSolver(beta_reg=0.001,solver_settings=optsettings,fixed_colloc_weight=100.),
+        optimizer=AlternatingActiveSetLMSolver(beta_reg=0.001,solver_settings=optsettings),
         feature_names=expdata.feature_names
     )
     model.fit(
