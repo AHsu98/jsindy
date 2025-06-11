@@ -1,7 +1,7 @@
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "7" # second gpu
 import jax
 jax.config.update('jax_enable_x64',True)
-jax.config.update('jax_default_device',jax.devices()[2])
-
 from pathlib import Path
 
 from jsindy.sindy_model import JSINDyModel
@@ -43,7 +43,7 @@ def noise_dt_exp(noise_var, dt, save_path:str = None, exp_data: ExpData = Lorenz
     )
 
     trajectory_model = DataAdaptedRKHSInterpolant()
-    dynamics_model = FeatureLinearModel()
+    dynamics_model = FeatureLinearModel(reg_scaling = 0.01)
     optsettings = LMSettings(
         max_iter = 1000,
         show_progress=False,
@@ -111,4 +111,4 @@ def big_experiment(exp_folder: str = "jsindy_results"):
 
 
 if __name__ == "__main__":
-    big_experiment(exp_folder="jsindy_results/june8/exp_results")
+    big_experiment(exp_folder="jsindy_results/june11/exp_results")
