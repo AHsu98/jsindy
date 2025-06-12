@@ -72,14 +72,21 @@ class AlternatingActiveSetLMSolver():
     def __init__(
             self, 
             beta_reg = 1.,
-            solver_settings =  LMSettings()
+            colloc_weight_scale = 100.,
+            fixed_colloc_weight = None,
+            solver_settings =  LMSettings(),
         ):
         self.solver_settings = solver_settings
         self.beta_reg = beta_reg
+        self.colloc_weight_scale = colloc_weight_scale
+        self.fixed_colloc_weight = fixed_colloc_weight
 
     def run(self, model, params):
         params["data_weight"] = 1/(params["sigma2_est"]+0.01)
-        params["colloc_weight"] = 100 * params["data_weight"]
+        if self.fixed_colloc_weight is None:
+            params["colloc_weight"] = self.colloc_weight_scale * params["data_weight"]
+        else:
+            params["colloc_weight"] = self.fixed_colloc_weight
         print(params)
 
         z0,theta0 = full_data_initialize(
@@ -101,7 +108,7 @@ class AlternatingActiveSetLMSolver():
                 theta,
                 params["data_weight"], 
                 params["colloc_weight"]
-            )   
+            )
 
         jac_func = jax.jacrev(resid_func)
         damping_matrix = block_diag(
@@ -150,7 +157,8 @@ class AlternatingActiveSetLMSolver():
             theta0=theta,
             residual_objective=aaslm_prob,
             beta=self.beta_reg,
-            show_progress=self.solver_settings.show_progress
+            show_progress=self.solver_settings.show_progress,
+            max_inner_iter=200,
         )
         theta = theta.reshape(
             model.dynamics_model.param_shape

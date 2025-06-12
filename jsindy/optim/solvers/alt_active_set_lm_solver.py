@@ -40,7 +40,8 @@ def AlternatingActiveSolve(
     residual_objective,
     beta,
     sparsifier: pySindySparsifier = None,
-    show_progress: bool = True
+    show_progress: bool = True,
+    max_inner_iter = 25,
 ):
     start_time = time.time()
     if sparsifier is None:
@@ -104,7 +105,7 @@ def AlternatingActiveSolve(
 
 
         for i in range(50):
-            for k in range(25):
+            for k in range(max_inner_iter):
                 succeeded = False
 
                 M = JtJ + beta*K0 + prox_reg*H

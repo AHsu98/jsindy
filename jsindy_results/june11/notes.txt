@@ -1,0 +1,2 @@
+1. Decreased coef_reg_scaling to 0.01.
+2. Increased maximum inner iterations in the active set refinement 25->200
