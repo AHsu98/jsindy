@@ -72,7 +72,7 @@ class AlternatingActiveSetLMSolver():
     def __init__(
             self, 
             beta_reg = 1.,
-            colloc_weight_scale = 1000.,
+            colloc_weight_scale = 100.,
             fixed_colloc_weight = None,
             solver_settings =  LMSettings(),
         ):
