@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "7" # second gpu
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
 import jax
 jax.config.update('jax_enable_x64',True)
 from pathlib import Path
@@ -112,4 +112,4 @@ def big_experiment(exp_folder: str = "jsindy_results"):
 
 
 if __name__ == "__main__":
-    big_experiment(exp_folder="jsindy_results/june11_run3/exp_results")
+    big_experiment(exp_folder="jsindy_results/june17_sqrt_weights/exp_results")

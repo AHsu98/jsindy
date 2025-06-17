@@ -99,6 +99,6 @@ class JointResidual():
         # colloc_weight = jnp.sqrt(params['colloc_weight'])
         return jnp.hstack(
             [
-                data_weight*self.data_residual(z),
-                colloc_weight * self.colloc_residual(z,theta)
+                jnp.sqrt(data_weight)   * self.data_residual(z),
+                jnp.sqrt(colloc_weight) * self.colloc_residual(z,theta)
                 ])

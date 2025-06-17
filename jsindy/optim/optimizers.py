@@ -72,7 +72,7 @@ class AlternatingActiveSetLMSolver():
     def __init__(
             self, 
             beta_reg = 1.,
-            colloc_weight_scale = 100.,
+            colloc_weight_scale = 1000.,
             fixed_colloc_weight = None,
             solver_settings =  LMSettings(),
         ):
@@ -82,7 +82,7 @@ class AlternatingActiveSetLMSolver():
         self.fixed_colloc_weight = fixed_colloc_weight
 
     def run(self, model, params):
-        params["data_weight"] = 1/(params["sigma2_est"]+0.01)
+        params["data_weight"] = 1/(params["sigma2_est"]+0.001)
         if self.fixed_colloc_weight is None:
             params["colloc_weight"] = self.colloc_weight_scale * params["data_weight"]
         else:
