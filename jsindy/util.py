@@ -90,11 +90,16 @@ def full_data_initialize(
     t,x,
     traj_model,
     dynamics_model,
-    sigma2_est = 0.1
+    sigma2_est = 0.1,
+    theta_reg = 0.001,
     ):
     t_grid = jnp.linspace(jnp.min(t),jnp.max(t),500)
     z = traj_model.get_fitted_params(t,x,lam = sigma2_est)
     X_pred = traj_model(t_grid,z)
     Xdot_pred = traj_model.derivative(t_grid,z)
-    theta = dynamics_model.get_fitted_theta(X_pred,Xdot_pred)
+    theta = dynamics_model.get_fitted_theta(
+        X_pred,
+        Xdot_pred,
+        lam = theta_reg
+        )
     return z,theta

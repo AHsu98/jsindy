@@ -103,9 +103,9 @@ def AlternatingActiveSolve(
         loss_vals = [obj_val]
         gnorms = [maxnorm(rhs)]
 
-
-        for i in range(50):
-            for k in range(max_inner_iter):
+        max_line_search = 20
+        for i in range(max_inner_iter):
+            for k in range(max_line_search):
                 succeeded = False
 
                 M = JtJ + beta*K0 + prox_reg*H

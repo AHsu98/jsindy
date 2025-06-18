@@ -125,3 +125,4 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
         M = A.T@A + lam * K
         M = M + 1e-7*jnp.diag(M)
         return jnp.linalg.solve(M,A.T@obs.flatten())
+
