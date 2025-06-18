@@ -164,7 +164,7 @@ class AlternatingActiveSetLMSolver():
             model.dynamics_model.param_shape
         )
 
-        return z, theta, [lm_opt_results,aas_lm_opt_results,], params
+        return z, theta, [lm_opt_results,aas_lm_opt_results], params
 
 @dataclass
 class AASLMProblem():
