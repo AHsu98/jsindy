@@ -195,6 +195,14 @@ def CholeskyLM(init_params, model, beta, optSettings: LMSettings = LMSettings())
         Mchol = cho_factor(M)
         step = cho_solve(Mchol, rhs)
         Jstep = J @ step
+        
+        #Apply 1 step of iterative refinement
+        linear_residual = (
+            J.T @ (Jstep - residuals)
+            + (alpha + beta) * damping_matrix @ step
+            - beta * damping_matrix @ params
+        )
+        step = step - cho_solve(Mchol,linear_residual)
 
         # Track the linear system residual
         linear_residual = (
@@ -332,6 +340,17 @@ def CholeskyLM(init_params, model, beta, optSettings: LMSettings = LMSettings())
                     i, loss, conv_history.gradnorm[-1], alpha, improvement_ratio
                 )
             return params, conv_history
+        
+        if i>50:
+            gradnorm_stagnate = conv_history.gradnorm[-1]>=0.99*conv_history.gradnorm[-25]
+            fval_stagnate = conv_history.loss_vals[-1]>=conv_history.loss_vals[-25] - 1e-9
+            if gradnorm_stagnate and fval_stagnate:
+                conv_history.finish(convergence_tag="stagnation")
+                if optSettings.show_progress is True:
+                    print_progress(
+                        i, loss, conv_history.gradnorm[-1], alpha, improvement_ratio
+                    )
+                return params, conv_history
                 
         if i % optSettings.print_every == 0 or i <= 5 or i == optSettings.max_iter-1:
             if optSettings.show_progress is True:
