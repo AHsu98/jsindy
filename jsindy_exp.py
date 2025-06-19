@@ -45,17 +45,21 @@ def noise_dt_exp(noise_var, dt, save_path:str = None, exp_data: ExpData = Lorenz
     trajectory_model = DataAdaptedRKHSInterpolant()
     dynamics_model = FeatureLinearModel(reg_scaling = 1.)
     optsettings = LMSettings(
-        max_iter = 1000,
+        max_iter = 2000,
         show_progress=False,
         no_tqdm=True,
-        min_alpha = 1e-15,
+        min_alpha = 1e-16,
         init_alpha = 5.,
     )
-
+    optimizer = AlternatingActiveSetLMSolver(
+            beta_reg=0.001,
+            solver_settings=optsettings,
+            fixed_colloc_weight=50.)
+    
     model = JSINDyModel(
         trajectory_model=trajectory_model,
         dynamics_model=dynamics_model,
-        optimizer=AlternatingActiveSetLMSolver(beta_reg=0.001,solver_settings=optsettings,fixed_colloc_weight=15.),
+        optimizer=optimizer,
         feature_names=expdata.feature_names
     )
     model.fit(
@@ -75,6 +79,7 @@ def noise_dt_exp(noise_var, dt, save_path:str = None, exp_data: ExpData = Lorenz
         pred_sim = model.predict(expdata.x_true),
         true = expdata.x_dot
     )
+    metrics['model_params'] = model.params
     if save_path:
         with open(save_path, 'wb') as f:
             pickle.dump(metrics, f)
@@ -112,4 +117,4 @@ def big_experiment(exp_folder: str = "jsindy_results"):
 
 
 if __name__ == "__main__":
-    big_experiment(exp_folder="jsindy_results/june17_sqrt_weights/exp_results")
+    big_experiment(exp_folder="jsindy_results/june18_test_chol/exp_results")
