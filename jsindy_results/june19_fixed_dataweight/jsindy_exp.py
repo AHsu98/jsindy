@@ -52,7 +52,7 @@ def noise_dt_exp(noise_var, dt, save_path:str = None, exp_data: ExpData = Lorenz
         init_alpha = 5.,
     )
     optimizer = AlternatingActiveSetLMSolver(
-            beta_reg=0.1,
+            beta_reg=0.001,
             solver_settings=optsettings,
             fixed_colloc_weight=50.,
             fixed_data_weight=1.
