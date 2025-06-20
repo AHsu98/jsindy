@@ -74,15 +74,22 @@ class AlternatingActiveSetLMSolver():
             beta_reg = 1.,
             colloc_weight_scale = 100.,
             fixed_colloc_weight = None,
+            fixed_data_weight = None,
             solver_settings =  LMSettings(),
+            max_inner_iterations = 200,
         ):
         self.solver_settings = solver_settings
         self.beta_reg = beta_reg
         self.colloc_weight_scale = colloc_weight_scale
         self.fixed_colloc_weight = fixed_colloc_weight
+        self.fixed_data_weight = fixed_data_weight
+        self.max_inner_iterations = max_inner_iterations
 
     def run(self, model, params):
-        params["data_weight"] = 1/(params["sigma2_est"]+0.001)
+        if self.fixed_data_weight is not None:
+            params['data_weight'] = self.fixed_data_weight
+        else:
+            params["data_weight"] = 1/(params["sigma2_est"]+0.001)
         if self.fixed_colloc_weight is None:
             params["colloc_weight"] = self.colloc_weight_scale * params["data_weight"]
         else:
@@ -158,7 +165,7 @@ class AlternatingActiveSetLMSolver():
             residual_objective=aaslm_prob,
             beta=self.beta_reg,
             show_progress=self.solver_settings.show_progress,
-            max_inner_iter=200,
+            max_inner_iter=self.max_inner_iterations,
         )
         theta = theta.reshape(
             model.dynamics_model.param_shape

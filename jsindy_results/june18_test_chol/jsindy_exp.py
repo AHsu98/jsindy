@@ -54,9 +54,7 @@ def noise_dt_exp(noise_var, dt, save_path:str = None, exp_data: ExpData = Lorenz
     optimizer = AlternatingActiveSetLMSolver(
             beta_reg=0.001,
             solver_settings=optsettings,
-            fixed_colloc_weight=50.,
-            fixed_data_weight=1.
-            )
+            fixed_colloc_weight=50.)
     
     model = JSINDyModel(
         trajectory_model=trajectory_model,
@@ -119,4 +117,4 @@ def big_experiment(exp_folder: str = "jsindy_results"):
 
 
 if __name__ == "__main__":
-    big_experiment(exp_folder="jsindy_results/june19_fixed_dataweight/exp_results")
+    big_experiment(exp_folder="jsindy_results/june18_test_chol/exp_results")
