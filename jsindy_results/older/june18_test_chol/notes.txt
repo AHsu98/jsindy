@@ -1,0 +1,5 @@
+Switch to cholesky reparametrized
+Add 1 step of iterative refinement in linear solve
+Add stagnation stopping condition
+Increase fixed collocation weight to 50
+Increased max iter to 2000
