@@ -22,7 +22,8 @@ class TrajectoryModel(ABC):
     def derivative(self,t,z,order = 1):
         pass
 
-class DataAdaptedRKHSInterpolant(TrajectoryModel):
+
+class RKHSInterpolant(TrajectoryModel):
     """
     Args:
         dimension: Dimension of the system
@@ -54,17 +55,8 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
         self.nugget = nugget
 
     def initialize(
-        self,t,x,t_colloc,params
+        self,t,x,t_colloc,params,sigma2_est = None,
     ):
-        fitted_kernel,sigma2_est,conv = fit_kernel(
-            init_kernel = self.kernel,
-            init_sigma2= jnp.var(x)/20,
-            X = t,
-            y = x,
-            lbfgs_tol=1e-8,
-            show_progress=params["show_progress"]
-        )
-        self.kernel = fitted_kernel
         params['sigma2_est'] = sigma2_est
         self.attach(t_obs = t,x_obs = x, basis_time_points=t_colloc)
         self.system_dim = x.shape[1]
@@ -127,7 +119,8 @@ class DataAdaptedRKHSInterpolant(TrajectoryModel):
         M = M + 1e-7*jnp.diag(M)
         return jnp.linalg.solve(M,A.T@obs.flatten())
 
-class CholDataAdaptedRKHSInterpolant(TrajectoryModel):
+
+class CholRKHSInterpolant(TrajectoryModel):
     """
     Args:
         dimension: Dimension of the system
@@ -159,17 +152,8 @@ class CholDataAdaptedRKHSInterpolant(TrajectoryModel):
         self.nugget = nugget
 
     def initialize(
-        self,t,x,t_colloc,params
+        self,t,x,t_colloc,params,sigma2_est = None,
     ):
-        fitted_kernel,sigma2_est,conv = fit_kernel(
-            init_kernel = self.kernel,
-            init_sigma2= jnp.var(x)/20,
-            X = t,
-            y = x,
-            lbfgs_tol=1e-8,
-            show_progress=params["show_progress"]
-        )
-        self.kernel = fitted_kernel
         params['sigma2_est'] = sigma2_est
         self.attach(t_obs = t,x_obs = x, basis_time_points=t_colloc)
         self.system_dim = x.shape[1]
@@ -228,3 +212,51 @@ class CholDataAdaptedRKHSInterpolant(TrajectoryModel):
         M = solve_triangular(self.cholT.T,K.T,lower = True).T
         return l2reg_lstsq(M,obs.flatten(),reg = lam)
 
+class DataAdaptedRKHSInterpolant(RKHSInterpolant):
+    """
+    Args:
+        dimension: Dimension of the system
+        time_points: time points that we include from basis from canonical feature map
+        derivative_orders: Orders of derivatives that we wish to model and include in
+        the basis.
+    """
+
+    def initialize(
+        self,t,x,t_colloc,params
+    ):
+        fitted_kernel,sigma2_est,conv = fit_kernel(
+            init_kernel = self.kernel,
+            init_sigma2= jnp.var(x)/20,
+            X = t,
+            y = x,
+            lbfgs_tol=1e-8,
+            show_progress=params["show_progress"]
+        )
+        self.kernel = fitted_kernel
+        params['sigma2_est'] = sigma2_est
+        self.attach(t_obs = t,x_obs = x, basis_time_points=t_colloc)
+        self.system_dim = x.shape[1]
+        self.num_basis = len(self.derivative_orders) * len(t_colloc)
+        self.tot_params = self.system_dim*self.num_basis
+        return params
+
+class CholDataAdaptedRKHSInterpolant(CholRKHSInterpolant):
+
+    def initialize(
+        self,t,x,t_colloc,params
+    ):
+        fitted_kernel,sigma2_est,conv = fit_kernel(
+            init_kernel = self.kernel,
+            init_sigma2= jnp.var(x)/20,
+            X = t,
+            y = x,
+            lbfgs_tol=1e-8,
+            show_progress=params["show_progress"]
+        )
+        self.kernel = fitted_kernel
+        params['sigma2_est'] = sigma2_est
+        self.attach(t_obs = t,x_obs = x, basis_time_points=t_colloc)
+        self.system_dim = x.shape[1]
+        self.num_basis = len(self.derivative_orders) * len(t_colloc)
+        self.tot_params = self.system_dim*self.num_basis
+        return params

@@ -1,0 +1,5 @@
+Go back to old threshold for stlsq, but increase the alpha to 1.
+Increase regularization to 0.01
+Increase weights when there is fewer data.
+
+STLSQ(threshold = 0.25,alpha = 1.)
