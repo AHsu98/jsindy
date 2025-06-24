@@ -77,6 +77,7 @@ class AlternatingActiveSetLMSolver():
             fixed_data_weight = None,
             solver_settings =  LMSettings(),
             max_inner_iterations = 200,
+            sparsifier = None,
         ):
         self.solver_settings = solver_settings
         self.beta_reg = beta_reg
@@ -84,6 +85,7 @@ class AlternatingActiveSetLMSolver():
         self.fixed_colloc_weight = fixed_colloc_weight
         self.fixed_data_weight = fixed_data_weight
         self.max_inner_iterations = max_inner_iterations
+        self.sparsifier = sparsifier
 
     def run(self, model, params):
         if self.fixed_data_weight is not None:
@@ -166,6 +168,7 @@ class AlternatingActiveSetLMSolver():
             beta=self.beta_reg,
             show_progress=self.solver_settings.show_progress,
             max_inner_iter=self.max_inner_iterations,
+            sparsifier=self.sparsifier,
         )
         theta = theta.reshape(
             model.dynamics_model.param_shape
