@@ -55,10 +55,13 @@ class CollocationTerm():
     def __init__(
         self,
         t_colloc,
+        w_colloc,
         trajectory_model:TrajectoryModel,
         dynamics_model:FeatureLinearModel,
         ):
         self.t_colloc = t_colloc
+        self.w_colloc = w_colloc
+        assert (len(t_colloc) == len(w_colloc))
         self.num_colloc = len(t_colloc)
         self.system_dim = trajectory_model.system_dim
         self.trajectory_model = trajectory_model
@@ -71,7 +74,7 @@ class CollocationTerm():
         X = self.trajectory_model(self.t_colloc,z)
         Xhat_pred = self.dynamics_model(X,theta)
         Xhat_true = self.trajectory_model.derivative(self.t_colloc,z,diff_order = 1)
-        return Xhat_true - Xhat_pred
+        return jnp.sqrt(self.w_colloc[:,None]) * (Xhat_true - Xhat_pred)
     
     def residual_flat(
         self,

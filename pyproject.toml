@@ -29,7 +29,7 @@ dependencies = [
     "pandas",
     "jaxopt",
     "tqdm",
-    "pysindy @ git+https://github.com/dynamicslab/pysindy@431e783",
+    "pysindy[miosr] @ git+https://github.com/dynamicslab/pysindy@431e783",
     "dill",
 ]
 
