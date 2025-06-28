@@ -77,6 +77,7 @@ class JSINDyModel():
         params["show_progress"] = self.optimizer.solver_settings.show_progress
         params = self.initialize_fit(t,x,t_colloc,w_colloc, params)
         z,theta,opt_result,params = self.optimizer.run(self,params)
+        print(len(self.t_colloc.shape))
         self.z = z
         self.theta = theta
         self.opt_result = opt_result
