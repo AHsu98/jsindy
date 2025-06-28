@@ -56,7 +56,7 @@ class FeatureLinearModel(DynamicsModel):
     # somewhere in jsindy.fit a predict is used and needs to fixed 
     def predict(self, x, theta):
         if jnp.ndim(x)==1:
-            return self.feature_map.transform(x) @ theta.T
+            return self.feature_map.transform(x) @ theta
         elif jnp.ndim(x)==2:
             return self.feature_map.transform(x) @ theta
         else:
