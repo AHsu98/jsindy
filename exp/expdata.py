@@ -310,6 +310,7 @@ class LotkaVolterraExp(ExpData):
     gamma: float = 0.4
     delta: float = 0.1
     initial_state: jax.Array = field(default_factory=lambda: jnp.array([10.,5.]))
+    feature_names: Optional[list[str]] = None
 
     def __post_init__(self):
         super().__post_init__()
@@ -344,3 +345,41 @@ class LotkaVolterraExp(ExpData):
 
         return jnp.array(true_theta)
     
+    def equations(self, coef, precision:int=3):
+        sys_coord_names = self.feature_names
+        feat_lib = ps.PolynomialLibrary()
+        feat_lib.fit(self.x_train)
+        feat_names = feat_lib.get_feature_names(sys_coord_names)
+
+        def term(c, name):
+            rounded_coef = jnp.round(c, precision)
+            if rounded_coef == 0:
+                return ""
+            else:
+                return f"{c:.{precision}f} {name}"
+
+        equations = []
+        for coef_row in coef:
+            components = [term(c, i) for c, i in zip(coef_row, feat_names)]
+            eq = " + ".join(filter(bool, components))
+            if not eq:
+                eq = f"{0:.{precision}f}"
+            equations.append(eq)
+
+        return equations
+
+    def print(self, precision: int = 3, **kwargs) -> None:
+        """Print the SINDy model equations.
+        precision: int, optional (default 3)
+            Precision to be used when printing out model coefficients.
+        **kwargs: Additional keyword arguments passed to the builtin print function
+        """
+        eqns = self.equations(coef = self.true_coeff,precision = precision)
+        if self.feature_names is None:
+            feature_names = [f"x{i}" for i in range(len(eqns))]
+        else:
+            feature_names = self.feature_names
+
+        for name, eqn in zip(feature_names, eqns, strict=True):
+            lhs = f"({name})'"
+            print(f"{lhs} = {eqn}", **kwargs)
