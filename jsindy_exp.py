@@ -1,5 +1,5 @@
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 import jax
 jax.config.update('jax_enable_x64',True)
 from pathlib import Path
@@ -98,8 +98,8 @@ def big_experiment(exp_folder: str = "jsindy_results"):
     folder = Path(exp_folder)
     folder.mkdir(parents=True,exist_ok=True)
 
-    noise_vars = jnp.linspace(0,20,11)
-    dt_vals = jnp.around(jnp.linspace(0,0.2,11)[1:],4)
+    noise_vars = jnp.linspace(0,20,11)[::-1]
+    dt_vals = jnp.around(jnp.linspace(0,0.2,11)[1:],4)[::-1]
 
     tot_exp = len(noise_vars)*len(dt_vals)
     idx=1
@@ -124,4 +124,4 @@ def big_experiment(exp_folder: str = "jsindy_results"):
 
 
 if __name__ == "__main__":
-    big_experiment(exp_folder="jsindy_results/june24_undo_changes/exp_results")
+    big_experiment(exp_folder="jsindy_results/june24_change_seed/exp_results")

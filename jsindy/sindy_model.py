@@ -1,7 +1,7 @@
 import jax
 jax.config.update('jax_enable_x64',True)
 import jax.numpy as jnp
-from jsindy.util import check_is_partial_data,get_collocation_points,get_equations
+from jsindy.util import check_is_partial_data,get_collocation_points_weights,get_equations
 from jsindy.trajectory_model import TrajectoryModel
 from jsindy.dynamics_model import FeatureLinearModel
 from jsindy.residual_functions import (
@@ -27,13 +27,19 @@ class JSINDyModel():
         t,
         x,
         t_colloc = None,
+        w_colloc = None,
         params = None,
     ):
+        if t_colloc is not None and w_colloc is None:
+            w_colloc = 1/len(t_colloc) * jnp.ones_like(t_colloc)
+
         if t_colloc is None:
-            t_colloc = get_collocation_points(t)
+            t_colloc,w_colloc = get_collocation_points_weights(t)
+
         if params is None:
             params = dict()
         self.t_colloc = t_colloc
+        self.w_colloc = w_colloc
         self.t = t
         self.x = x
 
@@ -49,7 +55,8 @@ class JSINDyModel():
             self.t,self.x,self.traj_model
         )
         self.colloc_term = CollocationTerm(
-            t_colloc,self.traj_model,self.dynamics_model
+            self.t_colloc,self.w_colloc,
+            self.traj_model,self.dynamics_model
         )
         self.residuals = JointResidual(self.data_term,self.colloc_term)
         return params
@@ -60,6 +67,7 @@ class JSINDyModel():
         t,
         x,
         t_colloc = None,
+        w_colloc = None,
         params = None
     ):
         #TODO: Add a logs dictionary that's carried around in the same way that params is
@@ -67,8 +75,9 @@ class JSINDyModel():
         if params is None:
             params = dict()
         params["show_progress"] = self.optimizer.solver_settings.show_progress
-        params = self.initialize_fit(t,x,t_colloc, params)
+        params = self.initialize_fit(t,x,t_colloc,w_colloc, params)
         z,theta,opt_result,params = self.optimizer.run(self,params)
+        print(len(self.t_colloc.shape))
         self.z = z
         self.theta = theta
         self.opt_result = opt_result

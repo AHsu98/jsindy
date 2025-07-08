@@ -9,7 +9,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 dependencies = [
-    "jax[cuda12]==0.6.0",
+    "jax[cuda12]",
     "numpy",
     "scipy",
     "scikit-learn",
@@ -29,7 +29,7 @@ dependencies = [
     "pandas",
     "jaxopt",
     "tqdm",
-    "pysindy @ git+https://github.com/AHsu98/pysindy@master",
+    "pysindy[miosr] @ git+https://github.com/dynamicslab/pysindy@431e783",
     "dill",
 ]
 

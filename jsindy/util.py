@@ -21,13 +21,15 @@ def check_is_partial_data(t,x,y,v):
     else:
         return True
     
-def get_collocation_points(t,num_colloc = 500):
+def get_collocation_points_weights(t,num_colloc = 500):
     min_t = jnp.min(t)
     max_t = jnp.max(t)
     span = max_t - min_t
     lower = min_t - span/num_colloc
     upper = max_t + span/num_colloc
-    return jnp.linspace(lower,upper,num_colloc)
+    col_points = jnp.linspace(lower,upper,num_colloc)
+    col_weights = 1/num_colloc * jnp.ones_like(col_points)
+    return col_points,col_weights
 
 @jax.jit
 def l2reg_lstsq(A, y, reg=1e-10):
