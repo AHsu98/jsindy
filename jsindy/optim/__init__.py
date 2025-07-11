@@ -1,6 +1,7 @@
-from .optimizers import LMSolver, LMSettings, AlternatingActiveSetLMSolver
+from .optimizers import LMSolver, LMSettings, AlternatingActiveSetLMSolver,AnnealedAlternatingActiveSetLMSolver
 __all__ = [
-    "AlternatingActiveSetLMSolver"
+    "AlternatingActiveSetLMSolver",
     "LMSolver",
-    "LMSettings"
+    "LMSettings",
+    "AnnealedAlternatingActiveSetLMSolver"
 ]
