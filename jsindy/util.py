@@ -21,12 +21,12 @@ def check_is_partial_data(t,x,y,v):
     else:
         return True
     
-def get_collocation_points_weights(t,num_colloc = 500):
+def get_collocation_points_weights(t,num_colloc = 500,bleedout_nodes = 1.):
     min_t = jnp.min(t)
     max_t = jnp.max(t)
     span = max_t - min_t
-    lower = min_t - span/num_colloc
-    upper = max_t + span/num_colloc
+    lower = min_t - bleedout_nodes*span/num_colloc
+    upper = max_t + bleedout_nodes*span/num_colloc
     col_points = jnp.linspace(lower,upper,num_colloc)
     col_weights = 1/num_colloc * jnp.ones_like(col_points)
     return col_points,col_weights
@@ -105,3 +105,13 @@ def full_data_initialize(
         lam = theta_reg
         )
     return z,theta
+
+def legendre_nodes_weights(n,a,b):
+    from numpy.polynomial.legendre import leggauss
+    nodes,weights = leggauss(n)
+    nodes = jnp.array(nodes)
+    weights = jnp.array(weights)
+    width = b-a
+    nodes = (width)/2*nodes + (a+b)/2
+    weights = (width/2) * weights
+    return nodes,weights

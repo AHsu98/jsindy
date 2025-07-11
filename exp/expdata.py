@@ -3,6 +3,7 @@ import jax
 from jax.random import PRNGKey
 from data.lorenz import solve_lorenz, lorenz_system
 from data.lotkavolterra import solve_lotka_voltera, lotka_volterra_system
+from jsindy.util import get_collocation_points_weights
 import jax.numpy as jnp
 jax.config.update("jax_enable_x64", True)
 
@@ -61,16 +62,7 @@ class ExpData:
 
         if self.n_colloc is None:
             self.n_colloc = self.t_train.shape[0]
-        min_t = jnp.min(self.t_train)
-        max_t = jnp.max(self.t_train)
-        span = max_t - min_t
-        lower = min_t - span/self.n_colloc
-        upper = max_t + span/self.n_colloc
-        self.t_colloc = jnp.linspace(
-            lower,
-            upper,
-            self.n_colloc
-        )
+        self.t_colloc,self.w_colloc = get_collocation_points_weights(self.t_train,self.n_colloc)
          
 
     def generate_train_data(
