@@ -29,7 +29,8 @@ class PartialDataTerm():
     def __init__(
         self,
         t,
-        y,v,
+        y,
+        v,
         trajectory_model:TrajectoryModel
         ):
         self.t = t
@@ -43,13 +44,13 @@ class PartialDataTerm():
     
     def residual(self,z):
         pred_y = jnp.sum(
-            self.interpolant(self.t,z) * self.v,
+            self.trajectory_model(self.t,z) * self.v,
             axis=1
             )
         return self.y - pred_y
     
     def residual_flat(self,z):
-        return self.residual(self,z)
+        return self.residual(z)
 
 class CollocationTerm():
     def __init__(

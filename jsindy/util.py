@@ -106,6 +106,25 @@ def full_data_initialize(
         )
     return z,theta
 
+def partial_obs_initialize(
+    t,y,v,
+    traj_model,
+    dynamics_model,
+    sigma2_est = 0.1,
+    theta_reg = 0.001,
+    ):
+    t_grid = jnp.linspace(jnp.min(t),jnp.max(t),500)
+    z = traj_model.get_partialobs_fitted_params(t,y,v,lam = sigma2_est)
+    X_pred = traj_model(t_grid,z)
+    Xdot_pred = traj_model.derivative(t_grid,z)
+    theta = dynamics_model.get_fitted_theta(
+        X_pred,
+        Xdot_pred,
+        lam = theta_reg
+        )
+    return z,theta
+
+
 def legendre_nodes_weights(n,a,b):
     from numpy.polynomial.legendre import leggauss
     nodes,weights = leggauss(n)
@@ -115,3 +134,10 @@ def legendre_nodes_weights(n,a,b):
     nodes = (width)/2*nodes + (a+b)/2
     weights = (width/2) * weights
     return nodes,weights
+
+def row_block_diag(V):
+    n, d = V.shape
+    eye = jnp.eye(n)[:, :, None]        # Shape (n, n, 1)
+    V_exp = V[None, :, :]               # Shape (1, n, d)
+    blocks = eye * V_exp                # Shape (n, n, d)
+    return blocks.reshape(n, n * d)     # Shape (n, n*d)

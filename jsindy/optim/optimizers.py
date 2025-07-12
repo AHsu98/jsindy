@@ -4,7 +4,7 @@ from jsindy.optim.solvers.alt_active_set_lm_solver import AlternatingActiveSolve
 from jsindy.trajectory_model import TrajectoryModel
 from jax.scipy.linalg import block_diag
 import jax.numpy as jnp
-from jsindy.util import full_data_initialize
+from jsindy.util import full_data_initialize,partial_obs_initialize
 from dataclasses import dataclass
 from functools import partial
 
@@ -22,13 +22,23 @@ class LMSolver():
         params["data_weight"] = 1/(params["sigma2_est"]+0.01)
         params["colloc_weight"] = 10
 
-        z0,theta0 = full_data_initialize(
-            model.t,
-            model.x,
-            model.traj_model,
-            model.dynamics_model,
-            sigma2_est=params["sigma2_est"]+0.01
-            )
+        if model.is_partially_observed is False:
+            z0,theta0 = full_data_initialize(
+                model.t,
+                model.x,
+                model.traj_model,
+                model.dynamics_model,
+                sigma2_est=params["sigma2_est"]+0.01
+                )
+        else:
+            z0,theta0 = partial_obs_initialize(
+                model.t,
+                model.y,
+                model.v,
+                model.traj_model,
+                model.dynamics_model,
+                sigma2_est=params["sigma2_est"]+0.01
+                )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         def resid_func(z_theta):
@@ -99,13 +109,23 @@ class AlternatingActiveSetLMSolver():
             params["colloc_weight"] = self.fixed_colloc_weight
         print(params)
 
-        z0,theta0 = full_data_initialize(
-            model.t,
-            model.x,
-            model.traj_model,
-            model.dynamics_model,
-            sigma2_est=params["sigma2_est"]+0.01
-            )
+        if model.is_partially_observed is False:
+            z0,theta0 = full_data_initialize(
+                model.t,
+                model.x,
+                model.traj_model,
+                model.dynamics_model,
+                sigma2_est=params["sigma2_est"]+0.01
+                )
+        else:
+            z0,theta0 = partial_obs_initialize(
+                model.t,
+                model.y,
+                model.v,
+                model.traj_model,
+                model.dynamics_model,
+                sigma2_est=params["sigma2_est"]+0.01
+                )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         def resid_func(z_theta):
@@ -213,14 +233,23 @@ class AnnealedAlternatingActiveSetLMSolver():
         else:
             params["colloc_weight"] = self.fixed_colloc_weight
         print(params)
-
-        z0,theta0 = full_data_initialize(
-            model.t,
-            model.x,
-            model.traj_model,
-            model.dynamics_model,
-            sigma2_est=params["sigma2_est"]+0.01
-            )
+        if model.is_partially_observed is False:
+            z0,theta0 = full_data_initialize(
+                model.t,
+                model.x,
+                model.traj_model,
+                model.dynamics_model,
+                sigma2_est=params["sigma2_est"]+0.01
+                )
+        else:
+            z0,theta0 = partial_obs_initialize(
+                model.t,
+                model.y,
+                model.v,
+                model.traj_model,
+                model.dynamics_model,
+                sigma2_est=params["sigma2_est"]+0.01
+                )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         

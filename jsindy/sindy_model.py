@@ -22,7 +22,7 @@ class JSINDyModel():
         self.optimizer = optimizer
         self.feature_names = feature_names
 
-    def initialize_fit(
+    def initialize_fit_full_obs(
         self,
         t,
         x,
@@ -30,14 +30,11 @@ class JSINDyModel():
         w_colloc = None,
         params = None,
     ):
-        if t_colloc is not None and w_colloc is None:
-            w_colloc = 1/len(t_colloc) * jnp.ones_like(t_colloc)
-
-        if t_colloc is None:
-            t_colloc,w_colloc = get_collocation_points_weights(t)
-
         if params is None:
             params = dict()
+        t_colloc,w_colloc = _setup_colloc(t,t_colloc,w_colloc)
+
+        
         self.t_colloc = t_colloc
         self.w_colloc = w_colloc
         self.t = t
@@ -60,24 +57,75 @@ class JSINDyModel():
         )
         self.residuals = JointResidual(self.data_term,self.colloc_term)
         return params
+    
+    def initialize_fit_partial_obs(
+        self,
+        t,
+        y,
+        v,
+        t_colloc = None,
+        w_colloc = None,
+        params= None
+        ):
+        if params is None:
+            params = dict()
+        t_colloc,w_colloc = _setup_colloc(t,t_colloc,w_colloc)
+
+        self.t_colloc = t_colloc
+        self.w_colloc = w_colloc
+        self.t = t
+        self.y = y
+        self.v = v
+
+        params = self.traj_model.initialize_partialobs(
+            self.t,self.y,self.v,t_colloc,params
+            )
+        
+        params = self.dynamics_model.initialize_partialobs(
+            self.t,self.y,self.v,params
+        )
+        
+        self.data_term = PartialDataTerm(
+            self.t,self.y,self.v,self.traj_model
+        )
+        self.colloc_term = CollocationTerm(
+            self.t_colloc,self.w_colloc,
+            self.traj_model,self.dynamics_model
+        )
+        self.residuals = JointResidual(self.data_term,self.colloc_term)
+        return params
         
         
     def fit(
         self,
         t,
-        x,
+        x = None,
         t_colloc = None,
         w_colloc = None,
-        params = None
+        params = None,
+        partialobs_y = None,
+        partialobs_v = None,
     ):
         #TODO: Add a logs dictionary that's carried around in the same way that params is
         
         if params is None:
             params = dict()
         params["show_progress"] = self.optimizer.solver_settings.show_progress
-        params = self.initialize_fit(t,x,t_colloc,w_colloc, params)
+
+        is_partially_observed = check_is_partial_data(t,x,partialobs_y,partialobs_v)
+        self.is_partially_observed = is_partially_observed
+        if is_partially_observed is True:
+            params = self.initialize_fit_partial_obs(
+                t,partialobs_y,partialobs_v,
+                t_colloc,w_colloc,params
+                )
+        else:
+            params = self.initialize_fit_full_obs(
+                t,x,t_colloc,
+                w_colloc, params
+                )
+
         z,theta,opt_result,params = self.optimizer.run(self,params)
-        print(len(self.t_colloc.shape))
         self.z = z
         self.theta = theta
         self.opt_result = opt_result
@@ -115,3 +163,11 @@ class JSINDyModel():
         if z is None:
             z = self.z
         return self.traj_model.predict(t,z)
+
+def _setup_colloc(t,t_colloc,w_colloc):
+    if t_colloc is not None and w_colloc is None:
+        w_colloc = 1/len(t_colloc) * jnp.ones_like(t_colloc)
+
+    if t_colloc is None:
+        t_colloc,w_colloc = get_collocation_points_weights(t)
+    return t_colloc,w_colloc

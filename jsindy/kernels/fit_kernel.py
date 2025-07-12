@@ -35,6 +35,36 @@ def build_neg_marglike(X,y):
     
     return loss
 
+SIGMA2_FLOOR = 1e-8
+def build_neg_marglike_partialobs(t,y,v):
+    if jnp.ndim(y)==1:
+        m = 1
+    elif jnp.ndim(y)==2:
+        m = y.shape[1]
+    else:
+        raise ValueError("y must be either a 1 or two dimensional array")
+    
+    def neg_marginal_likelihood(kernel,sigma2):
+        Kt = vectorize_kfunc(kernel)(t,t)
+        I = jnp.eye(len(t))
+        VV = v@v.T
+        K = Kt*VV
+
+        C = jax.scipy.linalg.cholesky(K + sigma2 * I,lower = True)
+        logdet = 2*jnp.sum(jnp.log(jnp.diag(C)))
+        yTKinvY = jnp.sum(
+            (jax.scipy.linalg.solve_triangular(C,y,lower = True))**2
+            )
+        return m * logdet + yTKinvY
+    
+    def loss(params):
+        k = params['kernel']
+        sigma2 = softplus(params['transformed_sigma2']) + SIGMA2_FLOOR
+        return neg_marginal_likelihood(k,sigma2)
+    
+    return loss
+
+
 def build_loocv(X,y):
     def loocv(kernel,sigma2):
         k = vectorize_kfunc(kernel)
@@ -113,6 +143,33 @@ def fit_kernel(
         show_progress=True,
         ):
     loss = loss_builder(X,y)
+    init_params = {'kernel':init_kernel,
+        'transformed_sigma2':jnp.array(softplus_inverse(init_sigma2))
+        }
+
+    params,conv_history_gd = run_gradient_descent(
+        loss,init_params,tol = gd_tol,
+        maxiter = max_gd_iter,
+        show_progress=show_progress,
+        init_stepsize=1e-4
+        )
+    solver = LBFGS(loss,maxiter = max_lbfgs_iter,tol = lbfgs_tol)
+    params,conv_history_bfgs,state = run_jaxopt_solver(solver,params, show_progress=show_progress)
+    conv_hist = [conv_history_gd,conv_history_bfgs]
+
+    return params['kernel'],jax.nn.softplus(params['transformed_sigma2']) + SIGMA2_FLOOR,conv_hist
+
+def fit_kernel_partialobs(
+        init_kernel,
+        init_sigma2,
+        t,y,v,
+        gd_tol = 1e-4,
+        lbfgs_tol = 1e-6,
+        max_gd_iter = 3000,
+        max_lbfgs_iter = 1000,
+        show_progress=True,
+        ):
+    loss = build_neg_marglike_partialobs(t,y,v)
     init_params = {'kernel':init_kernel,
         'transformed_sigma2':jnp.array(softplus_inverse(init_sigma2))
         }

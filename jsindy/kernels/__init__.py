@@ -7,7 +7,7 @@ from .kernels import (
     PolynomialKernel
 )
 from .base_kernels import Kernel,softplus_inverse,ConstantKernel
-from .fit_kernel import fit_kernel,build_loocv,build_neg_marglike
+from .fit_kernel import fit_kernel,build_loocv,build_neg_marglike,fit_kernel_partialobs
 
 __all__ = [
     "Kernel",
@@ -21,4 +21,5 @@ __all__ = [
     "build_loocv",
     "build_neg_marglike",
     "softplus_inverse",
+    "fit_kernel_partialobs"
 ]
