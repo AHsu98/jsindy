@@ -49,9 +49,15 @@ class FeatureLinearModel(DynamicsModel):
         self.tot_params = self.num_features*self.num_targets
         self.param_shape = (self.num_features, self.num_targets)
     
-    def initialize(self,t,x,theta):
+    def initialize(self,t,x,params):
         self.attach(x)
-        return theta
+        return params
+    
+    def initialize_partialobs(self,t,y,v,params):
+        #Pretending that v is x gives all of the right shapes
+        self.attach(v)
+        return params
+
 
     # somewhere in jsindy.fit a predict is used and needs to fixed 
     def predict(self, x, theta):
