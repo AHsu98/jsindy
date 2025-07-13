@@ -28,7 +28,9 @@ class LMSolver():
                 model.x,
                 model.traj_model,
                 model.dynamics_model,
-                sigma2_est=params["sigma2_est"]+0.01
+                sigma2_est=params["sigma2_est"]+0.01,
+                input_orders = model.input_orders,
+                ode_order = model.ode_order
                 )
         else:
             z0,theta0 = partial_obs_initialize(
@@ -37,7 +39,9 @@ class LMSolver():
                 model.v,
                 model.traj_model,
                 model.dynamics_model,
-                sigma2_est=params["sigma2_est"]+0.01
+                sigma2_est=params["sigma2_est"]+0.01,
+                input_orders = model.input_orders,
+                ode_order = model.ode_order
                 )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
@@ -115,7 +119,9 @@ class AlternatingActiveSetLMSolver():
                 model.x,
                 model.traj_model,
                 model.dynamics_model,
-                sigma2_est=params["sigma2_est"]+0.01
+                sigma2_est=params["sigma2_est"]+0.01,
+                input_orders = model.input_orders,
+                ode_order = model.ode_order
                 )
         else:
             z0,theta0 = partial_obs_initialize(
@@ -124,7 +130,9 @@ class AlternatingActiveSetLMSolver():
                 model.v,
                 model.traj_model,
                 model.dynamics_model,
-                sigma2_est=params["sigma2_est"]+0.01
+                sigma2_est=params["sigma2_est"]+0.01,
+                input_orders = model.input_orders,
+                ode_order = model.ode_order
                 )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
@@ -149,6 +157,8 @@ class AlternatingActiveSetLMSolver():
         lm_prob = LMProblem(resid_func, jac_func, damping_matrix)
         if self.solver_settings.show_progress:
             print("Warm Start")
+        print(model.dynamics_model.param_shape)
+
         z_theta, lm_opt_results = CholeskyLM(
             z_theta_init, 
             lm_prob,
@@ -190,6 +200,8 @@ class AlternatingActiveSetLMSolver():
             show_progress=self.solver_settings.show_progress,
             max_inner_iter=self.max_inner_iterations,
             sparsifier=self.sparsifier,
+            input_orders=model.input_orders,
+            ode_order = model.ode_order
         )
         theta = theta.reshape(
             model.dynamics_model.param_shape
@@ -239,7 +251,9 @@ class AnnealedAlternatingActiveSetLMSolver():
                 model.x,
                 model.traj_model,
                 model.dynamics_model,
-                sigma2_est=params["sigma2_est"]+0.01
+                sigma2_est=params["sigma2_est"]+0.01,
+                input_orders = model.input_orders,
+                ode_order = model.ode_order
                 )
         else:
             z0,theta0 = partial_obs_initialize(
@@ -248,7 +262,9 @@ class AnnealedAlternatingActiveSetLMSolver():
                 model.v,
                 model.traj_model,
                 model.dynamics_model,
-                sigma2_est=params["sigma2_est"]+0.01
+                sigma2_est=params["sigma2_est"]+0.01,
+                input_orders = model.input_orders,
+                ode_order = model.ode_order
                 )
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
@@ -330,6 +346,8 @@ class AnnealedAlternatingActiveSetLMSolver():
             show_progress=self.solver_settings.show_progress,
             max_inner_iter=self.max_inner_iterations,
             sparsifier=self.sparsifier,
+            input_orders=model.input_orders,
+            ode_order = model.ode_order,
         )
         theta = theta.reshape(
             model.dynamics_model.param_shape

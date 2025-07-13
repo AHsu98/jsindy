@@ -193,7 +193,7 @@ class CholRKHSInterpolant(TrajectoryModel):
             kernel = (
                 ConstantKernel(variance = 5.)
                 +ScalarMaternKernel(p = 5,variance = 10.)
-            )   
+            )
         self.kernel = kernel
         self.is_attached = False
         self.derivative_orders = derivative_orders
