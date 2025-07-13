@@ -157,7 +157,6 @@ class AlternatingActiveSetLMSolver():
         lm_prob = LMProblem(resid_func, jac_func, damping_matrix)
         if self.solver_settings.show_progress:
             print("Warm Start")
-        print(model.dynamics_model.param_shape)
 
         z_theta, lm_opt_results = CholeskyLM(
             z_theta_init, 
