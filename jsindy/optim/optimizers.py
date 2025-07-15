@@ -268,7 +268,7 @@ class AnnealedAlternatingActiveSetLMSolver():
         z_theta_init = jnp.hstack([z0,theta0.flatten()])
 
         
-        num_steps = 4
+        num_steps = self.num_annealing_steps
         dataweight_vals = [params['data_weight']]*num_steps
         colloc_weight_vals = [
             params['colloc_weight'] * (self.anneal_colloc_mult**(i+1 - num_steps)) for i in range(num_steps)
