@@ -12,7 +12,7 @@ def validate_data_inputs(t,x,y,v):
         assert len(t) == len(x)
     if x is not None:
         assert y is None
-        assert v is not None
+        assert v is None
 
 def check_is_partial_data(t,x,y,v):
     validate_data_inputs(t,x,y,v)
@@ -94,13 +94,19 @@ def full_data_initialize(
     dynamics_model,
     sigma2_est = 0.1,
     theta_reg = 0.001,
+    input_orders = (0,),
+    ode_order = 1,
     ):
     t_grid = jnp.linspace(jnp.min(t),jnp.max(t),500)
     z = traj_model.get_fitted_params(t,x,lam = sigma2_est)
-    X_pred = traj_model(t_grid,z)
-    Xdot_pred = traj_model.derivative(t_grid,z)
+
+    X_inputs = jnp.hstack(
+            [traj_model.derivative(t_grid,z,k) for k in input_orders]
+        )
+    Xdot_pred = traj_model.derivative(t_grid,z,ode_order)
+
     theta = dynamics_model.get_fitted_theta(
-        X_pred,
+        X_inputs,
         Xdot_pred,
         lam = theta_reg
         )
@@ -112,13 +118,19 @@ def partial_obs_initialize(
     dynamics_model,
     sigma2_est = 0.1,
     theta_reg = 0.001,
+    input_orders = (0,),
+    ode_order = 1,
     ):
     t_grid = jnp.linspace(jnp.min(t),jnp.max(t),500)
     z = traj_model.get_partialobs_fitted_params(t,y,v,lam = sigma2_est)
-    X_pred = traj_model(t_grid,z)
-    Xdot_pred = traj_model.derivative(t_grid,z)
+
+    X_inputs = jnp.hstack(
+            [traj_model.derivative(t_grid,z,k) for k in input_orders]
+        )
+    Xdot_pred = traj_model.derivative(t_grid,z,ode_order)
+
     theta = dynamics_model.get_fitted_theta(
-        X_pred,
+        X_inputs,
         Xdot_pred,
         lam = theta_reg
         )

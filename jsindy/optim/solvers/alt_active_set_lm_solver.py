@@ -41,7 +41,9 @@ def AlternatingActiveSolve(
     beta,
     sparsifier: pySindySparsifier = None,
     show_progress: bool = True,
-    max_inner_iter = 25,
+    max_inner_iter = 50,
+    input_orders = (0,),
+    ode_order = 1,
 ):
     start_time = time.time()
     if sparsifier is None:
@@ -77,9 +79,12 @@ def AlternatingActiveSolve(
         )
 
     def update_coefs(z):
-        X = interp(t_colloc,z)
-        feat_X = residual_objective.feature_library(X)
-        Xdot = interp.derivative(t_colloc,z)
+        X_inputs = jnp.hstack(
+            [interp.derivative(t_colloc,z,k) for k in input_orders]
+        )
+        feat_X = residual_objective.feature_library(X_inputs)
+
+        Xdot = interp.derivative(t_colloc,z,ode_order)
         theta = sparsifier(feat_X,Xdot).T
         return theta.flatten()
 

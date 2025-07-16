@@ -15,12 +15,28 @@ class JSINDyModel():
         trajectory_model:TrajectoryModel,
         dynamics_model:FeatureLinearModel,
         optimizer:LMSolver = LMSolver(),
-        feature_names: list[str] = None
+        feature_names: list[str] = None,
+        input_orders: tuple[int] = (0,),
+        ode_order: int = 1,
     ):
         self.traj_model = trajectory_model
         self.dynamics_model = dynamics_model
         self.optimizer = optimizer
-        self.feature_names = feature_names
+        input_orders = tuple(sorted(input_orders))
+        assert input_orders[0] == 0
+        self.input_orders = input_orders
+        self.ode_order = ode_order
+        self.variable_names = feature_names.copy()
+
+        if self.input_orders ==(0,):
+            self.feature_names = feature_names
+        else:
+            self.feature_names = (
+                feature_names + 
+                sum([
+                    [f"({name}{"'"*k})" for name in feature_names] for k in self.input_orders[1:]
+            ],[])
+            )
 
     def initialize_fit_full_obs(
         self,
@@ -45,7 +61,7 @@ class JSINDyModel():
             )
         
         params = self.dynamics_model.initialize(
-            self.t,self.x,params
+            self.t,self.x,params,self.input_orders
         )
 
         self.data_term = FullDataTerm(
@@ -53,7 +69,8 @@ class JSINDyModel():
         )
         self.colloc_term = CollocationTerm(
             self.t_colloc,self.w_colloc,
-            self.traj_model,self.dynamics_model
+            self.traj_model,self.dynamics_model,
+            input_orders = self.input_orders,ode_order = self.ode_order
         )
         self.residuals = JointResidual(self.data_term,self.colloc_term)
         return params
@@ -82,7 +99,7 @@ class JSINDyModel():
             )
         
         params = self.dynamics_model.initialize_partialobs(
-            self.t,self.y,self.v,params
+            self.t,self.y,self.v,params,self.input_orders
         )
         
         self.data_term = PartialDataTerm(
@@ -90,7 +107,8 @@ class JSINDyModel():
         )
         self.colloc_term = CollocationTerm(
             self.t_colloc,self.w_colloc,
-            self.traj_model,self.dynamics_model
+            self.traj_model,self.dynamics_model,
+            input_orders = self.input_orders,ode_order = self.ode_order
         )
         self.residuals = JointResidual(self.data_term,self.colloc_term)
         return params
@@ -148,10 +166,10 @@ class JSINDyModel():
         if self.feature_names is None:
             feature_names = [f"x{i}" for i in range(len(eqns))]
         else:
-            feature_names = self.feature_names
+            feature_names = self.variable_names
 
         for name, eqn in zip(feature_names, eqns, strict=True):
-            lhs = f"({name})'"
+            lhs = f"({name}){"'"*self.ode_order}"
             print(f"{lhs} = {eqn}", **kwargs)
             
     def predict(self,x,theta = None):
