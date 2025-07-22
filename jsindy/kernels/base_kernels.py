@@ -61,6 +61,7 @@ class Kernel(eqx.Module):
         """
         kc = ConstantKernel(c)
         return kc * self
+    
 
 class TransformedKernel(Kernel):
     """
@@ -77,6 +78,9 @@ class TransformedKernel(Kernel):
 
     def __call__(self, x, y):
         return self.kernel(self.transform(x),self.transform(y))
+    
+    def __str__(self):
+        return f"Transformed({self.kernel.__str__()})"
 
         
 class SumKernel(Kernel):
@@ -109,6 +113,10 @@ class SumKernel(Kernel):
         Push scaling down a level
         """
         return SumKernel(*[k.scale(c) for k in self.kernels])
+    
+    def __str__(self):
+        component_str = [k.__str__() for k in self.kernels]
+        return f"{" + ".join(component_str)}"
 
 class ProductKernel(Kernel):
     """
@@ -140,6 +148,10 @@ class ProductKernel(Kernel):
         Scale the first kernel
         """        
         return ProductKernel(*([self.kernels[0].scale(c)] + [self.kernels[1:]]))
+    
+    def __str__(self):
+        component_str = ["(" + k.__str__() + ")" for k in self.kernels]
+        return f"{"*".join(component_str)}"
 
 class FrozenKernel(Kernel):
     kernel:Kernel
@@ -148,6 +160,9 @@ class FrozenKernel(Kernel):
 
     def __call__(self, x, y):
         return jax.lax.stop_gradient(self.kernel)(x, y)
+
+    def __str__(self):
+        return self.kernel.__str__()
 
 class ConstantKernel(Kernel):
     """
@@ -169,8 +184,12 @@ class ConstantKernel(Kernel):
         self.raw_variance = softplus_inverse(jnp.array(variance))
 
     def __call__(self, x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
-        v = softplus(self.raw_variance)  # guaranteed positive
+        v = softplus(self.raw_variance)
         return v
     
     def scale(self,c):
         return ConstantKernel(c*softplus(self.raw_variance))
+
+    def __str__(self):
+        v = softplus(self.raw_variance)
+        return f"{v:.3f}"

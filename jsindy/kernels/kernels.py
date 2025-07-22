@@ -60,6 +60,7 @@ class ScalarMaternKernel(Kernel):
     Internally stored as "raw_" after applying softplus_inverse.
     """
     core_matern:callable = eqx.field(static=True)
+    p_order:int = eqx.field(static = True)
     raw_variance: jax.Array
     raw_lengthscale: jax.Array
     min_lengthscale: jax.Array = eqx.field(static=True)
@@ -71,6 +72,7 @@ class ScalarMaternKernel(Kernel):
         self.raw_lengthscale = softplus_inverse(jnp.array(lengthscale) - min_lengthscale)
         self.core_matern = build_matern_core(p)
         self.min_lengthscale = min_lengthscale
+        self.p_order = p
 
     def __call__(self, x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
         var = softplus(self.raw_variance)
@@ -81,6 +83,11 @@ class ScalarMaternKernel(Kernel):
     def scale(self, c):
         new_raw_var = softplus_inverse(c*softplus(self.raw_variance))
         return eqx.tree_at(lambda x: x.raw_variance, self, new_raw_var)
+    
+    def __str__(self):
+        var = softplus(self.raw_variance)
+        ls = softplus(self.raw_lengthscale) + self.min_lengthscale
+        return f"{var:.2f}Matern({self.p_order},{ls:.2f})"
 
 class GaussianRBFKernel(Kernel):
     """
@@ -101,7 +108,7 @@ class GaussianRBFKernel(Kernel):
         if lengthscale<min_lengthscale:
             raise ValueError("Initial lengthscale below minimum")
         self.raw_variance = softplus_inverse(jnp.array(variance))
-        self.raw_lengthscale = softplus_inverse(jnp.array(lengthscale))
+        self.raw_lengthscale = softplus_inverse(jnp.array(lengthscale) - min_lengthscale)
         self.min_lengthscale = min_lengthscale
 
     def __call__(self, x: jnp.ndarray, y: jnp.ndarray) -> jnp.ndarray:
@@ -113,6 +120,11 @@ class GaussianRBFKernel(Kernel):
     def scale(self, c):
         new_raw_var = softplus_inverse(c*softplus(self.raw_variance))
         return eqx.tree_at(lambda x: x.raw_variance, self, new_raw_var)
+    
+    def __str__(self):
+        var = softplus(self.raw_variance)
+        ls = softplus(self.raw_lengthscale) + self.min_lengthscale
+        return f"{var:.2f}GRBF({ls:.2f})"
 
     
 class RationalQuadraticKernel(Kernel):
@@ -149,6 +161,12 @@ class RationalQuadraticKernel(Kernel):
     def scale(self, c):
         new_raw_var = softplus_inverse(c*softplus(self.raw_variance))
         return eqx.tree_at(lambda x: x.raw_variance, self, new_raw_var)
+
+    def __str__(self):
+        var = softplus(self.raw_variance)
+        a = softplus(self.raw_alpha)
+        ls = softplus(self.raw_lengthscale) + self.min_lengthscale
+        return f"{var:.2f}RQ({a},{ls:.2f})"
 
 
 class SpectralMixtureKernel(Kernel):
@@ -188,6 +206,10 @@ class SpectralMixtureKernel(Kernel):
     def scale(self, c):
         new_raw_weights = softplus_inverse(c*softplus(self.raw_weights))
         return eqx.tree_at(lambda x: x.raw_weights, self, new_raw_weights)
+    
+    def __print__(self):
+        weights = softplus(self.raw_weights)
+        return f"{jnp.sum(weights):.2f}SpecMix(n={len(self.periods)})"
 
         
 class LinearKernel(Kernel):
@@ -216,6 +238,10 @@ class LinearKernel(Kernel):
     def scale(self, c):
         new_raw_var = softplus_inverse(c*softplus(self.raw_variance))
         return eqx.tree_at(lambda x: x.raw_variance, self, new_raw_var)
+    
+    def __str__(self):
+        v = softplus(self.raw_variance)
+        return f"{v:.2f}Lin()"
 
 
 class PolynomialKernel(Kernel):
@@ -244,6 +270,13 @@ class PolynomialKernel(Kernel):
     def scale(self, c):
         new_raw_var = softplus_inverse(c*softplus(self.raw_variance))
         return eqx.tree_at(lambda x: x.raw_variance, self, new_raw_var)
+    
+    def __print__(self):
+        v = softplus(self.raw_variance)  # guaranteed positive
+        return f"{v:.2f}Poly({self.c},{self.degree})"
+
+    
+
 
     
 

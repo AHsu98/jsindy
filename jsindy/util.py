@@ -12,7 +12,7 @@ def validate_data_inputs(t,x,y,v):
         assert len(t) == len(x)
     if x is not None:
         assert y is None
-        assert v is not None
+        assert v is None
 
 def check_is_partial_data(t,x,y,v):
     validate_data_inputs(t,x,y,v)
@@ -21,13 +21,15 @@ def check_is_partial_data(t,x,y,v):
     else:
         return True
     
-def get_collocation_points(t,num_colloc = 500):
+def get_collocation_points_weights(t,num_colloc = 500,bleedout_nodes = 1.):
     min_t = jnp.min(t)
     max_t = jnp.max(t)
     span = max_t - min_t
-    lower = min_t - span/num_colloc
-    upper = max_t + span/num_colloc
-    return jnp.linspace(lower,upper,num_colloc)
+    lower = min_t - bleedout_nodes*span/num_colloc
+    upper = max_t + bleedout_nodes*span/num_colloc
+    col_points = jnp.linspace(lower,upper,num_colloc)
+    col_weights = 1/num_colloc * jnp.ones_like(col_points)
+    return col_points,col_weights
 
 @jax.jit
 def l2reg_lstsq(A, y, reg=1e-10):
@@ -92,14 +94,62 @@ def full_data_initialize(
     dynamics_model,
     sigma2_est = 0.1,
     theta_reg = 0.001,
+    input_orders = (0,),
+    ode_order = 1,
     ):
     t_grid = jnp.linspace(jnp.min(t),jnp.max(t),500)
     z = traj_model.get_fitted_params(t,x,lam = sigma2_est)
-    X_pred = traj_model(t_grid,z)
-    Xdot_pred = traj_model.derivative(t_grid,z)
+
+    X_inputs = jnp.hstack(
+            [traj_model.derivative(t_grid,z,k) for k in input_orders]
+        )
+    Xdot_pred = traj_model.derivative(t_grid,z,ode_order)
+
     theta = dynamics_model.get_fitted_theta(
-        X_pred,
+        X_inputs,
         Xdot_pred,
         lam = theta_reg
         )
     return z,theta
+
+def partial_obs_initialize(
+    t,y,v,
+    traj_model,
+    dynamics_model,
+    sigma2_est = 0.1,
+    theta_reg = 0.001,
+    input_orders = (0,),
+    ode_order = 1,
+    ):
+    t_grid = jnp.linspace(jnp.min(t),jnp.max(t),500)
+    z = traj_model.get_partialobs_fitted_params(t,y,v,lam = sigma2_est)
+
+    X_inputs = jnp.hstack(
+            [traj_model.derivative(t_grid,z,k) for k in input_orders]
+        )
+    Xdot_pred = traj_model.derivative(t_grid,z,ode_order)
+
+    theta = dynamics_model.get_fitted_theta(
+        X_inputs,
+        Xdot_pred,
+        lam = theta_reg
+        )
+    return z,theta
+
+
+def legendre_nodes_weights(n,a,b):
+    from numpy.polynomial.legendre import leggauss
+    nodes,weights = leggauss(n)
+    nodes = jnp.array(nodes)
+    weights = jnp.array(weights)
+    width = b-a
+    nodes = (width)/2*nodes + (a+b)/2
+    weights = (width/2) * weights
+    return nodes,weights
+
+def row_block_diag(V):
+    n, d = V.shape
+    eye = jnp.eye(n)[:, :, None]        # Shape (n, n, 1)
+    V_exp = V[None, :, :]               # Shape (1, n, d)
+    blocks = eye * V_exp                # Shape (n, n, d)
+    return blocks.reshape(n, n * d)     # Shape (n, n*d)

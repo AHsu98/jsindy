@@ -37,26 +37,36 @@ class FeatureLinearModel(DynamicsModel):
         self.reg_scaling = reg_scaling
         
 
-    def attach(self, x: jax.Array):
-        self.feature_map.fit(x)
+    def attach(self, x: jax.Array,input_orders = (0,)):
+        shaped_features = jnp.hstack([x]*len(input_orders))
+        
+        self.feature_map.fit(shaped_features)
+        self.num_targets = x.shape[1]
+
         self.num_theta = (
-            self.feature_map.n_features_in_ * self.feature_map.n_output_features_
+            self.num_targets * self.feature_map.n_output_features_
         )
         self.num_features = self.feature_map.n_output_features_
         self.attached = True
         self.regmat = self.reg_scaling*jnp.eye(self.num_theta)
-        self.num_targets = x.shape[1]
+        
         self.tot_params = self.num_features*self.num_targets
         self.param_shape = (self.num_features, self.num_targets)
     
-    def initialize(self,t,x,theta):
-        self.attach(x)
-        return theta
+    def initialize(self,t,x,params,input_orders):
+        self.attach(x,input_orders = input_orders)
+        return params
+    
+    def initialize_partialobs(self,t,y,v,params,input_orders):
+        #Pretending that v is x gives all of the right shapes
+        self.attach(v,input_orders = input_orders)
+        return params
+
 
     # somewhere in jsindy.fit a predict is used and needs to fixed 
     def predict(self, x, theta):
         if jnp.ndim(x)==1:
-            return self.feature_map.transform(x) @ theta.T
+            return self.feature_map.transform(x) @ theta
         elif jnp.ndim(x)==2:
             return self.feature_map.transform(x) @ theta
         else:

@@ -29,7 +29,8 @@ class PartialDataTerm():
     def __init__(
         self,
         t,
-        y,v,
+        y,
+        v,
         trajectory_model:TrajectoryModel
         ):
         self.t = t
@@ -43,35 +44,46 @@ class PartialDataTerm():
     
     def residual(self,z):
         pred_y = jnp.sum(
-            self.interpolant(self.t,z) * self.v,
+            self.trajectory_model(self.t,z) * self.v,
             axis=1
             )
         return self.y - pred_y
     
     def residual_flat(self,z):
-        return self.residual(self,z)
+        return self.residual(z)
 
 class CollocationTerm():
     def __init__(
         self,
         t_colloc,
+        w_colloc,
         trajectory_model:TrajectoryModel,
         dynamics_model:FeatureLinearModel,
+        input_orders = (0,),
+        ode_order = 1,
         ):
         self.t_colloc = t_colloc
+        self.w_colloc = w_colloc
+        assert (len(t_colloc) == len(w_colloc))
         self.num_colloc = len(t_colloc)
         self.system_dim = trajectory_model.system_dim
         self.trajectory_model = trajectory_model
         self.dynamics_model = dynamics_model
+        self.input_orders = input_orders
+        self.ode_order = ode_order
+
     
     def residual(
         self,
         z,theta
     ):
-        X = self.trajectory_model(self.t_colloc,z)
-        Xhat_pred = self.dynamics_model(X,theta)
-        Xhat_true = self.trajectory_model.derivative(self.t_colloc,z,diff_order = 1)
-        return Xhat_true - Xhat_pred
+        X_inputs = jnp.hstack(
+            [self.trajectory_model.derivative(self.t_colloc,z,k) for k in self.input_orders]
+        )
+
+        Xdot_pred = self.dynamics_model(X_inputs,theta)
+        Xdot_true = self.trajectory_model.derivative(self.t_colloc,z,diff_order = self.ode_order)
+        return jnp.sqrt(self.w_colloc[:,None]) * (Xdot_true - Xdot_pred)
     
     def residual_flat(
         self,
@@ -95,8 +107,6 @@ class JointResidual():
         return self.colloc_term.residual_flat(z,theta)
     
     def residual(self, z, theta, data_weight, colloc_weight):
-        # data_weight = jnp.sqrt(params['data_weight'])
-        # colloc_weight = jnp.sqrt(params['colloc_weight'])
         return jnp.hstack(
             [
                 jnp.sqrt(data_weight)   * self.data_residual(z),
