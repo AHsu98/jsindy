@@ -1,3 +1,5 @@
+import math
+from typing import cast
 
 import jax
 from jax.random import PRNGKey
@@ -10,6 +12,7 @@ jax.config.update("jax_enable_x64", True)
 
 
 import pysindy as ps
+import gen_experiments.data as legacy_data
 
 from dataclasses import dataclass,field
 from typing import Optional
@@ -64,7 +67,7 @@ class ExpData:
         if self.n_colloc is None:
             self.n_colloc = self.t_train.shape[0]
         self.t_colloc,self.w_colloc = get_collocation_points_weights(self.t_train,self.n_colloc)
-         
+
 
     def generate_train_data(
             self,   
@@ -107,7 +110,56 @@ class ExpData:
         )
         self.x_test = jax.vmap(self.test_system_sol.evaluate)(self.t_true)
         self.x_dot_test = jnp.array([system(None,xi,system_args) for xi in self.x_test])
+
+
+@dataclass
+class GenExAdapter(ExpData):
+    """Unpacks a gen-experiments ``ProbData`` object into an ``ExpData``
+    
+    Notable deviations from ``ExpData``:
+    - ``GenExAdapter`` keeps separate train and test trajectories.
+    - ``GenExAdapter`` doesn't follow the same format of coeff/feature_names
+
+    The consequence of these is that jsindy.evaluate_jmodel needs to be rewritten
+    for these guys.
+    """
+    system: str = "lorenz"
+
+    def __post_init__(self):
+        super().__post_init__()
+        if self.t0 != 0.0:
+           raise ValueError("pysindy-experiments package only generates from t0=0")
+        dt = self.t1 / (cast(int, self.n_colloc)-1)
+        if jnp.abs(jnp.fmod(self.dt_train, dt) - 1) > 1e-14:
+            raise ValueError(
+                "pysindy-experiments package adapter requires dt_train "
+                "to be a multiple of dt_colloc."
+            )
+        thin_step = jnp.round(self.dt_train / dt)
+        train_inds
         
+        base_data:legacy_data.ProbData = legacy_data.gen_data(
+           group=self.system,
+           seed=self.seed,
+           n_trajectories=1,
+           ic_stdev=self.ic_std,
+           noise_abs=self.noise,
+           t_end=self.t1,
+           dt=dt
+        )["data"]
+        self.x_true = base_data.x_train_true[0]
+        self.t_true = base_data.t_train
+        self.t_train = jnp.arange(0, self.t1, self.dt_train)
+        self.x_train = base_data.x_train[0]
+        self.x_test = base_data.x_test[0]
+        self.x_dot_test = base_data.x_dot_test
+        self.true_coeff = base_data.coeff_true
+        self.feature_names = base_data.input_features
+
+    def print(self):
+        pass
+
+
 @dataclass
 class LinearExp(ExpData):
     A1 = jnp.array([[0, 1],
@@ -336,7 +388,7 @@ class LotkaVolterraExp(ExpData):
         true_theta[1,4] = self.delta
 
         return jnp.array(true_theta)
-    
+
     def equations(self, coef, precision:int=3):
         sys_coord_names = self.feature_names
         feat_lib = ps.PolynomialLibrary()
