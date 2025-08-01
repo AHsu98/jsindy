@@ -53,6 +53,16 @@ class RKHSInterpolant(TrajectoryModel):
         self.is_attached = False
         self.derivative_orders = derivative_orders
         self.nugget = nugget
+    
+    def __str__(self):
+        return (
+        f"""
+        RKHS Trajectory Model
+        kernel: {self.kernel.__str__()}
+        derivative_orders: {self.derivative_orders}
+        nugget: {self.nugget}
+        """
+        )
 
     def initialize(
         self,t,x,t_colloc,params,sigma2_est = None,
@@ -198,6 +208,15 @@ class CholRKHSInterpolant(TrajectoryModel):
         self.is_attached = False
         self.derivative_orders = derivative_orders
         self.nugget = nugget
+    
+    def __repr__(self):
+        return f"""
+        Cholesky Parametrized RKHS Trajectory Model
+        kernel: {self.kernel.__str__()}
+        derivative_orders: {self.derivative_orders}
+        nugget: {self.nugget}
+        """
+
 
     def initialize(
         self,t,x,t_colloc,params,sigma2_est = None,
@@ -305,6 +324,14 @@ class DataAdaptedRKHSInterpolant(RKHSInterpolant):
         derivative_orders: Orders of derivatives that we wish to model and include in
         the basis.
     """
+    def __repr__(self):
+        return f"""
+        MLE Adapted RKHS Trajectory Model
+        kernel: {self.kernel.__str__()}
+        derivative_orders: {self.derivative_orders}
+        nugget: {self.nugget}
+        """
+
 
     def initialize(
         self,t,x,t_colloc,params
@@ -347,6 +374,14 @@ class DataAdaptedRKHSInterpolant(RKHSInterpolant):
 
 
 class CholDataAdaptedRKHSInterpolant(CholRKHSInterpolant):
+    def __repr__(self):
+        return f"""
+        MLE Adapted Cholesky Parametrized RKHS Trajectory Model
+        kernel: {self.kernel.__str__()}
+        derivative_orders: {self.derivative_orders}
+        nugget: {self.nugget}
+        """
+
     def initialize(
         self,t,x,t_colloc,params
     ):

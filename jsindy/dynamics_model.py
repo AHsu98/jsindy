@@ -35,7 +35,9 @@ class FeatureLinearModel(DynamicsModel):
         self.feature_map = feature_map
         self.attached = False
         self.reg_scaling = reg_scaling
-        
+    
+    def __str__(self):
+        return "\n".join([f"{key}: {value}" for key, value in self.feature_map.get_params().items()])        
 
     def attach(self, x: jax.Array,input_orders = (0,)):
         shaped_features = jnp.hstack([x]*len(input_orders))

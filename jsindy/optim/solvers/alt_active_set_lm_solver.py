@@ -29,6 +29,9 @@ class pySindySparsifier():
             pysindy_optimizer = STLSQ(threshold = 0.25,alpha = 0.01)
         self.optimizer = pysindy_optimizer
     
+    def __str__(self):
+        return self.optimizer.__str__()
+    
     def __call__(self, feat_X , Xdot):
         self.optimizer.fit(feat_X,Xdot)
         theta = jnp.array(self.optimizer.coef_)
