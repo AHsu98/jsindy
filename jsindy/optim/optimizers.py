@@ -253,8 +253,8 @@ class AnnealedAlternatingActiveSetLMSolver():
             Annealed Alternating Active Set Optimizer
             beta_reg: {self.beta_reg},
             sparsifier: {self.sparsifier.__str__()}
-            data_weight: {self.params['data_weight']}
-            colloc_weight: {self.params['colloc_weight']}
+            data_weight: {self.fixed_data_weight}
+            colloc_weight: {self.fixed_colloc_weight}
             annealing_steps: {self.anneal_colloc_mult}
             anneal_colloc_mult: {self.anneal_colloc_mult}
             anneal_beta_mult: {self.anneal_beta_mult}
