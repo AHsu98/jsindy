@@ -40,10 +40,10 @@ class JSINDyModel():
             )
     
     def __str__(self):
-        traj_model_str = dedent(self.traj_model.__str__())
-        dynamics_model_str = dedent(self.dynamics_model.__str__())
-        optimizer_str = dedent(self.optimizer.__str__())
-        return dedent(
+        traj_model_str = (self.traj_model.__str__())
+        dynamics_model_str = (self.dynamics_model.__str__())
+        optimizer_str = (self.optimizer.__str__())
+        model_string = (
             f"""
             --------Trajectory Model--------
             {traj_model_str}
@@ -55,6 +55,7 @@ class JSINDyModel():
             {optimizer_str}
             """
         )
+        return '\n'.join(map(lambda x:x.lstrip(),model_string.__str__().split('\n')))
 
     def initialize_fit_full_obs(
         self,
