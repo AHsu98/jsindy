@@ -45,6 +45,12 @@ def noise_dt_exp(noise_var, dt:0.05, save_path:str = None, exp_data: ExpData = L
         differentiation_method=ps.SmoothedFiniteDifference()
     )
 
+    model.fit(
+        x = np.array(expdata.x_train),
+        t = np.array(expdata.t_train),
+    )
+
+
     metrics = {}
 
     metrics["coeff_mets"]  = coeff_metrics(
