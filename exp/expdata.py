@@ -113,7 +113,7 @@ class ExpData:
 
 
 @dataclass
-class GenExAdapter(ExpData):
+class GenExAdapter:
     """Unpacks a gen-experiments ``ProbData`` object into an ``ExpData``
     
     Notable deviations from ``ExpData``:
@@ -123,22 +123,41 @@ class GenExAdapter(ExpData):
     The consequence of these is that jsindy.evaluate_jmodel needs to be rewritten
     for these guys.
     """
-    system: str = "lorenz"
+    system: str
+    n_colloc: int
+    n_train: int
+    t0: float
+    t1: float
+    seed: int = 1234
+    noise: float = 0.0
+    ic_std: float = 2.
+    one_rkey: bool = False
+
 
     def __post_init__(self):
-        super().__post_init__()
+        self.random_key = PRNGKey(self.seed)
+        if self.one_rkey:
+            self.train_key = self.random_key
+            self.test_key = self.random_key
+        else:
+            self.train_key, self.test_key = jax.random.split(self.random_key,2)
+
+        if jnp.mod(self.n_colloc, self.n_train) != 0.0:
+            raise ValueError(
+                "pysindy-experiments package adapter requires n_colloc "
+                "to be a multiple of n_train."
+            )
+        thin_step = int(jnp.fix(self.n_colloc / self.n_train))
+        self.t_true = jnp.linspace(self.t0, self.t1, self.n_colloc, endpoint=False)
+        self.t_train = self.t_true[::thin_step]
+
+        self.t_colloc,self.w_colloc = get_collocation_points_weights(self.t_train,self.n_colloc)
+
         if self.t0 != 0.0:
            raise ValueError("pysindy-experiments package only generates from t0=0")
-        dt = self.t1 / (cast(int, self.n_colloc)-1)
-        if jnp.abs(jnp.fmod(self.dt_train, dt) - 1) > 1e-14:
-            raise ValueError(
-                "pysindy-experiments package adapter requires dt_train "
-                "to be a multiple of dt_colloc."
-            )
-        thin_step = jnp.round(self.dt_train / dt)
-        train_inds
-        
-        base_data:legacy_data.ProbData = legacy_data.gen_data(
+        dt = self.t1 / cast(int, self.n_colloc)
+
+        base_data: legacy_data.ProbData = legacy_data.gen_data(
            group=self.system,
            seed=self.seed,
            n_trajectories=1,
@@ -149,15 +168,15 @@ class GenExAdapter(ExpData):
         )["data"]
         self.x_true = base_data.x_train_true[0]
         self.t_true = base_data.t_train
-        self.t_train = jnp.arange(0, self.t1, self.dt_train)
-        self.x_train = base_data.x_train[0]
+        self.x_train = base_data.x_train[0][::thin_step]
         self.x_test = base_data.x_test[0]
         self.x_dot_test = base_data.x_dot_test
         self.true_coeff = base_data.coeff_true
         self.feature_names = base_data.input_features
 
     def print(self):
-        pass
+        for feat, eqn in zip(self.feature_names, self.true_coeff):
+            print(feat+"' = "+ " + ".join(f"{coef} {term}" for term, coef in eqn.items()))
 
 
 @dataclass
