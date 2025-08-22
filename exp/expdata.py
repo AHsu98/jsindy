@@ -168,9 +168,8 @@ class GenExAdapter:
         )["data"]
         self.x_true = base_data.x_train_true[0]
         self.t_true = base_data.t_train
+        self.x_dot = base_data.x_train_true_dot[0]
         self.x_train = base_data.x_train[0][::thin_step]
-        self.x_test = base_data.x_test[0]
-        self.x_dot_test = base_data.x_dot_test
         self.true_coeff = base_data.coeff_true
         self.feature_names = base_data.input_features
 
@@ -263,7 +262,6 @@ class LinearExp(ExpData):
         for name, eqn in zip(feature_names, eqns, strict=True):
             lhs = f"({name})'"
             print(f"{lhs} = {eqn}", **kwargs) 
-
 
 
 @dataclass
