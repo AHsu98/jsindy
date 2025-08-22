@@ -29,7 +29,7 @@ dependencies = [
     "pandas",
     "jaxopt",
     "tqdm",
-    "pysindy[miosr] @ git+https://github.com/dynamicslab/pysindy@431e783",
+    "pysindy[miosr] == 2.0.0-rc3",
     "dill",
 ]
 
