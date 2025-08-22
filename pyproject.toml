@@ -30,7 +30,7 @@ dependencies = [
     "jaxopt",
     "tqdm",
     "pysindy[miosr] >= 2.0.0-rc3",
-    "pysindy-experiments @ git+https://github.com/Jacob-Stevens-Haas/gen-experiments@f0d9eda",
+    "pysindy-experiments @ git+https://github.com/Jacob-Stevens-Haas/gen-experiments@42f0081",
     "dill",
 ]
 
