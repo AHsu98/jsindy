@@ -7,7 +7,7 @@ from .tree_opt import run_gradient_descent,run_jaxopt_solver
 from jaxopt import LBFGS
 
 
-SIGMA2_FLOOR = 1e-5
+SIGMA2_FLOOR = 1e-6
 def build_neg_marglike(X,y):
     if jnp.ndim(y)==1:
         m = 1

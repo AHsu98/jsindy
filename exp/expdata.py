@@ -1,6 +1,7 @@
 
 import jax
 from jax.random import PRNGKey
+from data.linear import solve_linear, linear_system
 from data.lorenz import solve_lorenz, lorenz_system
 from data.lotkavolterra import solve_lotka_voltera, lotka_volterra_system
 from jsindy.util import get_collocation_points_weights
@@ -107,6 +108,92 @@ class ExpData:
         self.x_test = jax.vmap(self.test_system_sol.evaluate)(self.t_true)
         self.x_dot_test = jnp.array([system(None,xi,system_args) for xi in self.x_test])
         
+@dataclass
+class LinearExp(ExpData):
+    A1 = jnp.array([[0, 1],
+                    [-2, -3]])
+    A2 = jnp.array([[0, -1],
+                    [4,  0]])
+    A3 = jnp.array([[-1, 2],
+                    [-2, -1]])
+    initial_state: jax.Array = field(
+        default_factory=lambda: jnp.array([1., 0., 0., 1., -1., 0.])
+    )
+    feature_names = None
+
+    def __post_init__(self):
+        super().__post_init__()
+
+        self.args = (self.A1,self.A2,self.A3)
+        self.true_coeff = self.generate_true_coeff()
+
+        # self.x_true = jax.vmap(self.system_sol.evaluate)(self.t_true)
+
+        self.generate_train_data(
+            system=linear_system,
+            system_args = self.args,
+            system_solver=solve_linear,
+            initial_state=self.initial_state,
+            rkey=self.train_key,
+        )
+
+        self.generate_test_data(
+            system=linear_system,
+            system_solver=solve_linear,
+            system_args=self.args,
+            initial_state=self.initial_state,
+            rkey=self.test_key
+        )
+    def generate_true_coeff(self):
+        # if poly lib with deg = 2
+        theta = np.zeros((6, 28))
+        theta = np.zeros((6, 7))
+        theta[:2,1:3]  = self.A1
+        theta[2:4,3:5] = self.A2
+        theta[4:6,5:7] = self.A3
+
+        return jnp.array(theta)
+
+    def equations(self, coef, precision:int=3):
+        sys_coord_names = self.feature_names
+        feat_lib = ps.PolynomialLibrary()
+        feat_lib.fit(self.x_train)
+        feat_names = feat_lib.get_feature_names(sys_coord_names)
+
+        def term(c, name):
+            rounded_coef = jnp.round(c, precision)
+            if rounded_coef == 0:
+                return ""
+            else:
+                return f"{c:.{precision}f} {name}"
+
+        equations = []
+        for coef_row in coef:
+            components = [term(c, i) for c, i in zip(coef_row, feat_names)]
+            eq = " + ".join(filter(bool, components))
+            if not eq:
+                eq = f"{0:.{precision}f}"
+            equations.append(eq)
+
+        return equations
+
+    def print(self, precision: int = 3, **kwargs) -> None:
+        """Print the SINDy model equations.
+        precision: int, optional (default 3)
+            Precision to be used when printing out model coefficients.
+        **kwargs: Additional keyword arguments passed to the builtin print function
+        """
+        eqns = self.equations(coef = self.true_coeff,precision = precision)
+        if self.feature_names is None:
+            feature_names = [f"x{i}" for i in range(len(eqns))]
+        else:
+            feature_names = self.feature_names
+
+        for name, eqn in zip(feature_names, eqns, strict=True):
+            lhs = f"({name})'"
+            print(f"{lhs} = {eqn}", **kwargs) 
+
+
 
 @dataclass
 class LorenzExp(ExpData):
@@ -215,6 +302,7 @@ class LotkaVolterraExp(ExpData):
     gamma: float = 0.4
     delta: float = 0.1
     initial_state: jax.Array = field(default_factory=lambda: jnp.array([10.,5.]))
+    feature_names: Optional[list[str]] = None
 
     def __post_init__(self):
         super().__post_init__()
@@ -249,3 +337,41 @@ class LotkaVolterraExp(ExpData):
 
         return jnp.array(true_theta)
     
+    def equations(self, coef, precision:int=3):
+        sys_coord_names = self.feature_names
+        feat_lib = ps.PolynomialLibrary()
+        feat_lib.fit(self.x_train)
+        feat_names = feat_lib.get_feature_names(sys_coord_names)
+
+        def term(c, name):
+            rounded_coef = jnp.round(c, precision)
+            if rounded_coef == 0:
+                return ""
+            else:
+                return f"{c:.{precision}f} {name}"
+
+        equations = []
+        for coef_row in coef:
+            components = [term(c, i) for c, i in zip(coef_row, feat_names)]
+            eq = " + ".join(filter(bool, components))
+            if not eq:
+                eq = f"{0:.{precision}f}"
+            equations.append(eq)
+
+        return equations
+
+    def print(self, precision: int = 3, **kwargs) -> None:
+        """Print the SINDy model equations.
+        precision: int, optional (default 3)
+            Precision to be used when printing out model coefficients.
+        **kwargs: Additional keyword arguments passed to the builtin print function
+        """
+        eqns = self.equations(coef = self.true_coeff,precision = precision)
+        if self.feature_names is None:
+            feature_names = [f"x{i}" for i in range(len(eqns))]
+        else:
+            feature_names = self.feature_names
+
+        for name, eqn in zip(feature_names, eqns, strict=True):
+            lhs = f"({name})'"
+            print(f"{lhs} = {eqn}", **kwargs)
