@@ -19,7 +19,7 @@ class TrajectoryModel(ABC):
     def initalize_fit(self,t,x):
         pass
 
-    def derivative(self,t,z,order = 1):
+    def derivative(self,t,z,diff_order = 1):
         pass
 
 
