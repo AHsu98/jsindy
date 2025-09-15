@@ -1,6 +1,7 @@
 import jax
-jax.config.update('jax_enable_x64',True)
+print(jax.devices())
 jax.config.update('jax_default_device',jax.devices()[6])
+jax.config.update('jax_enable_x64',True)
 
 from jax.random import key
 from scipy.integrate import solve_ivp
@@ -84,7 +85,7 @@ def noise_time_exp(noise_ratio,tend,rkey = 0, save_path=None):
     data_weight =  1.
     colloc_weight = 1e5
     sparsifier = pySindySparsifier(
-        STLSQ(threshold = 0.2,alpha = 0.05)
+        STLSQ(threshold = 0.3,alpha = 1e-5)
         )
 
 
@@ -103,7 +104,7 @@ def noise_time_exp(noise_ratio,tend,rkey = 0, save_path=None):
         feature_names=expdata.feature_names
     )
 
-    model.fit(t_train, X_train,t_colloc=t_colloc)
+    model.fit(t_train, X_train,t_colloc=t_colloc,w_colloc = w_colloc)
 
     metrics = {}
 
@@ -131,7 +132,7 @@ if __name__ == "__main__":
     folder = Path(folder)
     folder.mkdir(parents=True,exist_ok=True)
     main_key = key(1)
-    num_repeats = 32
+    num_repeats = 8
     all_keys = jax.random.split(main_key,num_repeats)
     for i,rkey in enumerate(all_keys):
         for tend in tqdm(tEndL):

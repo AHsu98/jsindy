@@ -1,5 +1,5 @@
 import jax
-from jax.random import PRNGKey
+from jax.random import key
 from scipy.integrate import solve_ivp
 from tqdm.auto import tqdm
 from exp.expdata import LorenzExp
@@ -22,8 +22,6 @@ from pathlib import Path
 jax.config.update('jax_enable_x64',True)
 
 
-seed = 1234
-rkey = PRNGKey(seed)
 
 
 x0 = jnp.array([-8, 8, 27.])
@@ -50,7 +48,10 @@ cutoff = 1
 signal_power = jnp.std(X_true)
 n_colloc = 500
 
-def noise_time_exp(noise_ratio,tend, save_path=None):
+def noise_time_exp(noise_ratio,tend,rkey = 0, save_path=None):
+    print("------------------------------------------------------------------------")
+    print(f"NOISE RATIO: {noise_ratio}")
+    print(f"T end: {tend}")
     t_end_idx = int(tend // dt)
     X_train = X_true[:t_end_idx]
     t_train = t_true[:t_end_idx]
@@ -75,11 +76,11 @@ def noise_time_exp(noise_ratio,tend, save_path=None):
     )
     optsettings = LMSettings(
         max_iter = 1000,
-        show_progress=True,
-        no_tqdm=False,
+        no_tqdm=True,
         min_alpha = 1e-16,
         init_alpha = 5.,
         print_every = 100,
+        show_progress = True,
     )
     data_weight =  100.
     colloc_weight = 1e4
@@ -116,6 +117,9 @@ def noise_time_exp(noise_ratio,tend, save_path=None):
     if save_path: 
         with open(save_path, 'wb') as file:
             pickle.dump(metrics,file)
+    model.print()
+    print(model)
+    print(metrics['coeff_mets']["coeff_rel_l2"])
 
     return metrics
 
@@ -125,12 +129,14 @@ if __name__ == "__main__":
 
     folder = Path(folder)
     folder.mkdir(parents=True,exist_ok=True)
-
-    cutoff  = 1
-    for tend in tqdm(tEndL[:cutoff]):
-        for noise_ratio in epsL[:cutoff]:
-            exp_name = f"noise_ratio_{float(jnp.around(noise_ratio,3))}_tend_{float(jnp.around(tend,3))}.pkl"
-            save_path = folder / exp_name
-            mets = noise_time_exp(noise_ratio, tend,save_path=save_path)
+    main_key = key(1)
+    num_repeats = 32
+    all_keys = jax.random.split(main_key,num_repeats)
+    for i,rkey in enumerate(all_keys):
+        for tend in tqdm(tEndL):
+            for noise_ratio in epsL:
+                exp_name = f"run_{i}_noise_ratio_{float(jnp.around(noise_ratio,3))}_t_end_{float(jnp.around(tend,3))}.pkl"
+                save_path = folder / exp_name
+                mets = noise_time_exp(noise_ratio, tend, rkey,save_path=save_path)
 
 

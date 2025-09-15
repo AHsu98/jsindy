@@ -44,6 +44,7 @@ class ExpData:
     t1: float = 10.0
     dt: float = 0.01
     dt_train: float = 0.1
+    ode_dt0: float = 0.001
     seed: int = 1234
     noise: float = 0.0
     ic_std: float = 2.
@@ -78,7 +79,7 @@ class ExpData:
             initial_state=initial_state,
             t0=self.t0,
             t1=self.t1,
-            dt=self.dt,
+            dt=self.ode_dt0,
             *system_args
         )
         self.x_true = jax.vmap(self.system_sol.evaluate)(self.t_true)
