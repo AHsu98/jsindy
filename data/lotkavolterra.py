@@ -2,7 +2,6 @@ import jax
 import jax.numpy as jnp
 
 jax.config.update("jax_enable_x64", True)
-jax.config.update("jax_default_device", jax.devices()[0])
 import diffrax
 
 def lotka_volterra_system(t, state, args):
