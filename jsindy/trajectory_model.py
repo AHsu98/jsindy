@@ -19,7 +19,7 @@ class TrajectoryModel(ABC):
     def initalize_fit(self,t,x):
         pass
 
-    def derivative(self,t,z,order = 1):
+    def derivative(self,t,z,diff_order = 1):
         pass
 
 
@@ -391,7 +391,7 @@ class CholDataAdaptedRKHSInterpolant(CholRKHSInterpolant):
             X = t,
             y = x,
             lbfgs_tol=1e-8,
-            show_progress=params["show_progress"]
+            show_progress=False,#params["show_progress"]
         )
         self.kernel = fitted_kernel
         params['sigma2_est'] = sigma2_est
@@ -411,7 +411,7 @@ class CholDataAdaptedRKHSInterpolant(CholRKHSInterpolant):
             y = y,
             v = v,
             lbfgs_tol=1e-8,
-            show_progress=params["show_progress"]
+            show_progress=False,#params["show_progress"]
         )
         self.kernel = fitted_kernel
         params['sigma2_est'] = sigma2_est
