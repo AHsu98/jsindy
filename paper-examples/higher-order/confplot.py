@@ -1,3 +1,6 @@
+from matplotlib import pyplot as plt
+plt.style.use('ggplot')
+
 SIM_KW = {
     "color": "purple",
     'alpha': 0.4,
