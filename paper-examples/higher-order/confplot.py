@@ -7,6 +7,7 @@ SIM_KW = {
     "lw": 5,
     "linestyle": "-",
     "label": "Simulated Dynamics",
+    "solid_capstyle": "butt",
 }
 EST_KW = {
     "color": "blue",
@@ -14,13 +15,14 @@ EST_KW = {
     "alpha": 0.4,
     "linestyle": "-",
     "label": "State Estimation",
-    "zorder": 1
+    "zorder": 1,
+    "solid_capstyle": "butt",
 }
 TRUE_KW = {
     "color": "black",
     "linestyle": "-",
     "label": "True Trajectory",
-    "zorder": 2
+    "zorder": 2,
 }
 TRUE_UNS_KW = {
     "color": "black",
@@ -28,10 +30,10 @@ TRUE_UNS_KW = {
     "label": "True Unseen Trajectory",
 }
 OBS_KW = {
-    "facecolors":"red",
-    "edgecolors": "black",
+    "facecolors":"black",
+    "edgecolors": "red",
     "lw":1,
-    "s": 20,
+    "s": 10,
     "label": "Observations",
-    "zorder": 3
+    "zorder": 3,
 }
