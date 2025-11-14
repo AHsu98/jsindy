@@ -1,7 +1,6 @@
 import jax
 import jax.numpy as jnp
 jax.config.update("jax_enable_x64", True)
-jax.config.update("jax_default_device", jax.devices()[0])
 import diffrax
 
 def lorenz_system(t, state, args):
@@ -14,7 +13,7 @@ def lorenz_system(t, state, args):
 
 def solve_lorenz(sigma=10.0, rho=28.0, beta=8.0/3.0, 
                  initial_state=jnp.array([1., 1.,1.]), 
-                 t0=0.0, t1=20.0, dt=0.01):
+                 t0=0.0, t1=20.0, dt=0.001):
     """Solves the Lorenz system.
 
     Args:
@@ -29,8 +28,9 @@ def solve_lorenz(sigma=10.0, rho=28.0, beta=8.0/3.0,
     """
     args = (sigma, rho, beta)
     term = diffrax.ODETerm(lorenz_system)
-    solver = diffrax.Tsit5()  # Adaptive Runge-Kutta solver
-    t_span = (t0, t1)
+    stepsize_controller = diffrax.PIDController(atol = 1e-9,rtol = 1e-9)
+    
+    solver = diffrax.Tsit5()
     
     save_at = diffrax.SaveAt(dense=True)  # Save at regular intervals
     sol = diffrax.diffeqsolve(
@@ -39,10 +39,11 @@ def solve_lorenz(sigma=10.0, rho=28.0, beta=8.0/3.0,
         t0=t0,
         t1=t1,
         dt0=dt,  # Initial step size
+        stepsize_controller=stepsize_controller,
         y0=initial_state,
         args=args,
         saveat=save_at,
-        max_steps = int(10*(t1-t0)/dt)
+        max_steps = int(100*(t1-t0)/dt)
     )
     
     return sol

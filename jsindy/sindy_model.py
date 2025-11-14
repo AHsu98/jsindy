@@ -8,6 +8,7 @@ from jsindy.residual_functions import (
     FullDataTerm,PartialDataTerm,CollocationTerm,
     JointResidual)
 from jsindy.optim import LMSolver
+from textwrap import dedent
 
 class JSINDyModel():
     def __init__(
@@ -37,6 +38,24 @@ class JSINDyModel():
                     [f"({name}{"'"*k})" for name in feature_names] for k in self.input_orders[1:]
             ],[])
             )
+    
+    def __str__(self):
+        traj_model_str = (self.traj_model.__str__())
+        dynamics_model_str = (self.dynamics_model.__str__())
+        optimizer_str = (self.optimizer.__str__())
+        model_string = (
+            f"""
+            --------Trajectory Model--------
+            {traj_model_str}
+
+            --------Feature Library---------
+            {dynamics_model_str}
+
+            --------Optimizer Setup--------
+            {optimizer_str}
+            """
+        )
+        return '\n'.join(map(lambda x:x.lstrip(),model_string.__str__().split('\n')))
 
     def initialize_fit_full_obs(
         self,
@@ -49,7 +68,6 @@ class JSINDyModel():
         if params is None:
             params = dict()
         t_colloc,w_colloc = _setup_colloc(t,t_colloc,w_colloc)
-
         
         self.t_colloc = t_colloc
         self.w_colloc = w_colloc

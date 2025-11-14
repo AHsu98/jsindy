@@ -101,6 +101,18 @@ class AlternatingActiveSetLMSolver():
         self.fixed_data_weight = fixed_data_weight
         self.max_inner_iterations = max_inner_iterations
         self.sparsifier = sparsifier
+        self.params = {}
+    
+    def __str__(self):
+        return (
+        f"""
+        Alternating Active Set Optimizer
+        beta_reg: {self.beta_reg},
+        sparsifier: {self.sparsifier.__str__()}
+        data_weight: {self.params['data_weight']}
+        colloc_weight: {self.params['colloc_weight']}
+        """
+        )
 
     def run(self, model, params):
         if self.fixed_data_weight is not None:
@@ -205,6 +217,7 @@ class AlternatingActiveSetLMSolver():
         theta = theta.reshape(
             model.dynamics_model.param_shape
         )
+        self.params = params
 
         return z, theta, [lm_opt_results,aas_lm_opt_results], params
 
@@ -233,6 +246,21 @@ class AnnealedAlternatingActiveSetLMSolver():
         self.num_annealing_steps = num_annealing_steps
         self.anneal_colloc_mult = anneal_colloc_mult
         self.anneal_beta_mult = anneal_beta_mult
+    
+    def __str__(self):
+        return (
+            f"""
+            Annealed Alternating Active Set Optimizer
+            beta_reg: {self.beta_reg},
+            sparsifier: {self.sparsifier.__str__()}
+            data_weight: {self.fixed_data_weight}
+            colloc_weight: {self.fixed_colloc_weight}
+            annealing_steps: {self.anneal_colloc_mult}
+            anneal_colloc_mult: {self.anneal_colloc_mult}
+            anneal_beta_mult: {self.anneal_beta_mult}
+            """
+            )
+
 
     def run(self, model, params):
         sigma2est = params.get("sigma2_est", 0)

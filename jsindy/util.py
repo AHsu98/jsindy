@@ -28,7 +28,8 @@ def get_collocation_points_weights(t,num_colloc = 500,bleedout_nodes = 1.):
     lower = min_t - bleedout_nodes*span/num_colloc
     upper = max_t + bleedout_nodes*span/num_colloc
     col_points = jnp.linspace(lower,upper,num_colloc)
-    col_weights = 1/num_colloc * jnp.ones_like(col_points)
+    #Scale so that it's consistent to integral, rather than sum to 1.
+    col_weights = (upper - lower)/num_colloc * jnp.ones_like(col_points)
     return col_points,col_weights
 
 @jax.jit

@@ -67,8 +67,8 @@ class ScalarMaternKernel(Kernel):
 
     def __init__(self,p, lengthscale=1.0,variance=1.0,min_lengthscale = 0.01):
         self.raw_variance = softplus_inverse(jnp.array(variance))
-        if lengthscale<min_lengthscale:
-            raise ValueError("Initial lengthscale below minimum")
+        # if lengthscale<min_lengthscale:
+        #     raise ValueError("Initial lengthscale below minimum")
         self.raw_lengthscale = softplus_inverse(jnp.array(lengthscale) - min_lengthscale)
         self.core_matern = build_matern_core(p)
         self.min_lengthscale = min_lengthscale
