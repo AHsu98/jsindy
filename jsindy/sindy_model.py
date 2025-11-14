@@ -17,7 +17,7 @@ class JSINDyModel():
         dynamics_model:FeatureLinearModel,
         optimizer:LMSolver = LMSolver(),
         feature_names: list[str] = None,
-        input_orders: tuple[int] = (0,),
+        input_orders: tuple[int, ...] = (0,),
         ode_order: int = 1,
     ):
         self.traj_model = trajectory_model

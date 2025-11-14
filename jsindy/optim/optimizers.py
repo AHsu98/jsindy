@@ -263,10 +263,14 @@ class AnnealedAlternatingActiveSetLMSolver():
 
 
     def run(self, model, params):
+        sigma2est = params.get("sigma2_est", 0)
+        if sigma2est is None:
+            # If not using data-adapted interpolant
+            sigma2est = 0.0
         if self.fixed_data_weight is not None:
             params['data_weight'] = self.fixed_data_weight
         else:
-            params["data_weight"] = 1/(params["sigma2_est"]+0.001)
+            params["data_weight"] = 1 / (sigma2est + 0.001)
         if self.fixed_colloc_weight is None:
             params["colloc_weight"] = self.colloc_weight_scale * params["data_weight"]
         else:
@@ -278,7 +282,7 @@ class AnnealedAlternatingActiveSetLMSolver():
                 model.x,
                 model.traj_model,
                 model.dynamics_model,
-                sigma2_est=params["sigma2_est"]+0.01,
+                sigma2_est=sigma2est + 0.01,
                 input_orders = model.input_orders,
                 ode_order = model.ode_order
                 )
@@ -289,7 +293,7 @@ class AnnealedAlternatingActiveSetLMSolver():
                 model.v,
                 model.traj_model,
                 model.dynamics_model,
-                sigma2_est=params["sigma2_est"]+0.01,
+                sigma2_est=sigma2est + 0.01,
                 input_orders = model.input_orders,
                 ode_order = model.ode_order
                 )
