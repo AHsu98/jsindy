@@ -119,7 +119,8 @@ def AlternatingActiveSolve(
         rhs = J.T@F + beta * jnp.hstack([K@z,jnp.zeros(m)])
 
         loss_vals = [obj_val]
-        gnorms = [maxnorm(rhs)]
+        gnorm = maxnorm(rhs)
+        gnorms = [gnorm]
 
         max_line_search = 20
         for i in range(max_inner_iter):
@@ -154,7 +155,7 @@ def AlternatingActiveSolve(
                     break
                 else:
                     prox_reg = 2*prox_reg
-            
+
             if succeeded is False:
                 if show_progress is True:
                     print(f"Subsolver stalled with ||grad||_infty = {gnorm}")
