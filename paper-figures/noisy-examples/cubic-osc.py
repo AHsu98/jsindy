@@ -1,6 +1,6 @@
 import jax
 jax.config.update('jax_enable_x64',True)
-jax.config.update("jax_default_device",jax.devices()[2])
+jax.config.update("jax_default_device",jax.devices()[1])
 import jax.numpy as jnp
 import diffrax
 
@@ -13,7 +13,7 @@ from jsindy.trajectory_model import CholDataAdaptedRKHSInterpolant
 from jsindy.dynamics_model import FeatureLinearModel,PolyLib
 from jsindy.optim import AlternatingActiveSetLMSolver, LMSettings,AnnealedAlternatingActiveSetLMSolver
 from jsindy.optim.solvers.alt_active_set_lm_solver import pySindySparsifier,NoSparsifier
-from pysindy import STLSQ,SR3,MIOSR
+from pysindy import STLSQ,SR3,MIOSR,EnsembleOptimizer
 import jsindy
 from numpy import loadtxt
 
@@ -49,7 +49,10 @@ optsettings = LMSettings(
 data_weight =  10.
 colloc_weight = 1e5
 sparsifier = pySindySparsifier(
-    SR3(reg_weight_lam=1.,regularizer='L1',relax_coeff_nu=1.,normalize_columns=True,max_iter = 1000)
+    EnsembleOptimizer(
+    STLSQ(threshold = 0.05,alpha = 10.),
+    bagging=True,
+    n_models = 200)
     )
 
 # sparsifier = NoSparsifier()
@@ -81,8 +84,6 @@ true_theta = jnp.array(
     [ 0.        ,  0.        ],
     [ 2., -0.1]])
 
-noise_vals = jnp.array([0.02,0.04,0.08,0.16,0.32,0.64])
-
 all_xpreds = []
 all_xdot_preds = []
 all_thetas = []
@@ -110,5 +111,5 @@ for repetition in range(num_repeats):
         all_x_errors = all_x_errors.at[repetition,s].set(
             jnp.sqrt(jnp.mean((x_vals - xpred)**2))/jnp.std(x_vals))
     
-jnp.save('exp1/all_theta_errors.npy', all_theta_errors)
-jnp.save('exp1/all_x_errors.npy', all_x_errors)
+jnp.save('exp2/all_theta_errors.npy', all_theta_errors)
+jnp.save('exp2/all_x_errors.npy', all_x_errors)
