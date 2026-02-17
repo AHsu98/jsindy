@@ -22,6 +22,16 @@ class ConvHistory():
     history:dict
     convergence_tag:str
 
+class NoSparsifier():
+    def __init__(self):
+        pass
+
+    def __str__(self):
+        return "No sparsification"
+    
+    def __call__(self, feat_X,Xdot):
+        theta_hat = jnp.linalg.lstsq(feat_X,Xdot)[0]
+        return theta_hat.T
 
 class pySindySparsifier():
     def __init__(self,pysindy_optimizer=None):
@@ -109,7 +119,8 @@ def AlternatingActiveSolve(
         rhs = J.T@F + beta * jnp.hstack([K@z,jnp.zeros(m)])
 
         loss_vals = [obj_val]
-        gnorms = [maxnorm(rhs)]
+        gnorm = maxnorm(rhs)
+        gnorms = [gnorm]
 
         max_line_search = 20
         for i in range(max_inner_iter):
@@ -144,9 +155,10 @@ def AlternatingActiveSolve(
                     break
                 else:
                     prox_reg = 2*prox_reg
-            
+
             if succeeded is False:
-                print("Line search Failed")
+                if show_progress is True:
+                    print(f"Subsolver stalled with ||grad||_infty = {gnorm}")
                 break
             Jz = jac_z(z,theta)
             Jtheta = jac_theta(z,theta)[:,active_set]
@@ -168,6 +180,7 @@ def AlternatingActiveSolve(
     cum_time = []
     prox_reg = 1.
     finished = False
+    old_support = jnp.where(jnp.abs(theta)>1e-7)[0]
     support = jnp.where(jnp.abs(theta)>1e-7)[0]
     for i in range(20):
         theta = update_coefs(z)
@@ -181,7 +194,8 @@ def AlternatingActiveSolve(
             cum_time.append(time.time()-start_time)
             break
 
-        if set(np.array(support)) == set(np.array(new_support)):
+        if set(np.array(support)) == set(np.array(new_support)) or (
+            set(np.array(new_support))==set(np.array(old_support))):
             #Run 1 more iteration just to be sure
             if show_progress:
                 print("Active set stabilized")
@@ -192,11 +206,12 @@ def AlternatingActiveSolve(
                 set(np.array(new_support)))
             if show_progress:
                 print(f"{len(sym_diff)} active coeffs changed")
+        old_support = support
         support = new_support
 
         cum_time.append(time.time()-start_time)
         convergence_tag = "maximum-iterations"
     conv_hist = ConvHistory(
-        history={'gnorms':all_gnorms,'objval':all_objval,"cumlative_time":cum_time},convergence_tag=convergence_tag
+        history={'gnorms':all_gnorms,'objval':all_objval,"cumulative_time":cum_time},convergence_tag=convergence_tag
     )
     return z, theta, conv_hist
