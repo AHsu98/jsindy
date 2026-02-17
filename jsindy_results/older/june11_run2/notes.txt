@@ -1,7 +1,0 @@
-Set fixed collocation weight of 100.
-Increase coeff reg scaling to 0.1
-Increase max iters
-Increase initial alpha damping to prevent early blowup.
-
-
-I killed this early because it was doing worse.
