@@ -10,7 +10,7 @@ Requires Python >= 3.10, and you may want to manually install ```jax[cuda12]``` 
 
 ## Citation
 
-A. W. Hsu, I. W. Griss Salas, J. M. Stevens-Haas, J. N. Kutz, A. Aravkin, and B. Hosseini, "A joint optimization approach to identifying sparse dynamics using least squares kernel collocation," arXiv preprint arXiv:2511.18555, 2025.
+A. W. Hsu, I. Griss Salas, J. M. Stevens-Haas, J. N. Kutz, A. Aravkin, and B. Hosseini, "A joint optimization approach to identifying sparse dynamics using least squares kernel collocation," arXiv preprint arXiv:2511.18555, 2025.
 
 ```bibtex
 @misc{hsu2025jointoptimizationapproachidentifying,
