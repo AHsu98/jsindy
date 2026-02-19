@@ -15,7 +15,7 @@ A. W. Hsu, I. Griss Salas, J. M. Stevens-Haas, J. N. Kutz, A. Aravkin, and B. Ho
 ```bibtex
 @misc{hsu2025jointoptimizationapproachidentifying,
       title={A joint optimization approach to identifying sparse dynamics using least squares kernel collocation},
-      author={Alexander W. Hsu and Ike W. Griss Salas and Jacob M. Stevens-Haas and J. Nathan Kutz and Aleksandr Aravkin and Bamdad Hosseini},
+      author={Alexander W. Hsu and Ike Griss Salas and Jacob M. Stevens-Haas and J. Nathan Kutz and Aleksandr Aravkin and Bamdad Hosseini},
       year={2025},
       eprint={2511.18555},
       archivePrefix={arXiv},
